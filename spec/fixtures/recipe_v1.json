@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": ["id", "name", "servings"],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "servings": {
+      "type": "number"
+    }
+  }
+}
