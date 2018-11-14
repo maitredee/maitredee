@@ -39,7 +39,7 @@ module Maitredee
     end
 
     def client=(slug)
-      @client = "::Maitredee::Adapters::#{slug.to_s.classify}Adapter".constantize.new
+      @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new
     end
 
     def topic_resource_name(name)
