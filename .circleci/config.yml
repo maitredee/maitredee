@@ -1,0 +1,96 @@
+reference:
+  bundle_path: &bundle_path
+    vendor/bundle
+
+  restore_repo: &restore_repo
+    restore_cache:
+      name: Restore repo cache
+      keys:
+        - v1-repo-{{ .Branch }}-{{ .Revision }}
+        - v1-repo-{{ .Branch }}
+        - v1-repo-master
+
+  gems_cache_key: &gems_cache_key
+    v1-gem-cache-{{ arch }}-{{ checksum "Gemfile.lock" }}
+
+  restore_gems: &restore_gems
+    restore_cache:
+      name: Restore gem cache
+      keys:
+        - *gems_cache_key
+        - v1-gem-cache-{{ arch }}
+
+defaults: &defaults
+  working_directory: ~/maitredee
+  docker:
+    - image: circleci/ruby:2.5.1
+      environment: &docker_ruby_env
+        RACK_ENV: test
+        RAILS_ENV: test
+        BUNDLE_PATH: *bundle_path
+version: 2
+jobs:
+  checkout_code:
+    <<: *defaults
+    steps:
+      - *restore_repo
+      - checkout
+      - save_cache:
+          name: Save repo cache
+          key: v1-repo-{{ .Branch }}-{{ .Revision }}
+          paths: .
+
+  bundle_dependencies:
+    <<: *defaults
+    steps:
+      - *restore_repo
+      - *restore_gems
+      - run: bundle install --jobs=4 --retry=3 --frozen
+      - save_cache:
+          name: Save gem cache
+          key: *gems_cache_key
+          paths: *bundle_path
+
+  rspec:
+    parallelism: 3
+    <<: *defaults
+    docker:
+      - image: circleci/ruby:2.5.1
+        environment:
+          <<: *docker_ruby_env
+          RAILS_ENV: test
+          TEST_QUEUE_WORKERS: 5
+          CIRCLE_TEST_REPORTS: "/tmp/test-results"
+          CIRCLE_ARTIFACTS: "/tmp/test-results"
+
+    steps:
+      - *restore_repo
+      - *restore_gems
+
+      - run:
+          name: run rspec tests
+          command: |
+            mkdir /tmp/test-results
+            TEST_FILES=$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+            bundle exec rspec \
+              --profile 10 \
+              --format progress \
+              $TEST_FILES
+      # Collect reports
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: test-results
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - checkout_code
+      - bundle_dependencies:
+          requires:
+            - checkout_code
+      - rspec:
+          requires:
+            - checkout_code
+            - bundle_dependencies

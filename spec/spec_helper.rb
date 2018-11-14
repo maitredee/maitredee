@@ -1,5 +1,6 @@
 require "bundler/setup"
 require "maitredee"
+require "maitredee/adapters/test_adapter"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
