@@ -5,7 +5,7 @@ module Maitredee
     module ClassMethods
       def call(*args)
         publisher = new(*args)
-        publisher.compose
+        publisher.process
         publisher.published_messages
       end
 
