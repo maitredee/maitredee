@@ -56,7 +56,7 @@ module Maitredee
         error["data_pointer"]
       end.join(", ")
 
-      if properties.present?
+      if errors.any?
         raise ValidationError, "Invalid properties: #{properties}"
       end
     end
