@@ -4,12 +4,12 @@ module Maitredee
       def publish(message)
         client.publish(
           topic_arn: topics[message.topic_resource_name].topic_arn,
-          message: message.data.to_json,
+          message: message.body.to_json,
           message_attributes: {
-            "topic_name" => {data_type: "String", string_value: message.topic},
-            "event_name" => {data_type: "String", string_value: message.event_name},
-            "primary_key" => {data_type: "String", string_value: message.primary_key},
-            "schema_name" => {data_type: "String", string_value: message.validation_schema}
+            "topic_name" => { data_type: "String", string_value: message.topic },
+            "event_name" => { data_type: "String", string_value: message.event_name },
+            "primary_key" => { data_type: "String", string_value: message.primary_key },
+            "schema_name" => { data_type: "String", string_value: message.validation_schema }
           }
         )
       end

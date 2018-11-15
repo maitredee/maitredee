@@ -15,19 +15,19 @@ module Maitredee
 
     def publish(
       topic:,
-      data:,
+      body:,
       validation_schema:,
       event_name: nil,
       primary_key: nil
     )
-      raise ArgumentError, "topic, data or validation_schema is nil" if topic.nil? || data.nil? || validation_schema.nil?
-      data = data.as_json
-      validate!(data, validation_schema)
+      raise ArgumentError, "topic, body or validation_schema is nil" if topic.nil? || body.nil? || validation_schema.nil?
+      body = body.as_json
+      validate!(body, validation_schema)
 
       message = Message.new(
         topic_resource_name: topic_resource_name(topic),
         topic: topic,
-        data: data,
+        body: body,
         validation_schema: validation_schema,
         event_name: event_name,
         primary_key: primary_key&.to_s
@@ -50,8 +50,8 @@ module Maitredee
       ].join("--")
     end
 
-    def validate!(data, schema)
-      errors = schemas[schema].validate(data.as_json)
+    def validate!(body, schema)
+      errors = schemas[schema].validate(body.as_json)
       properties = errors.map do |error|
         error["data_pointer"]
       end.join(", ")
@@ -80,7 +80,7 @@ module Maitredee
   ValidationError = Class.new(Error)
 
   Message = Struct.new(
-    :topic_resource_name, :topic, :data, :validation_schema,
+    :topic_resource_name, :topic, :body, :validation_schema,
     :event_name, :primary_key, keyword_init: true
   )
 end

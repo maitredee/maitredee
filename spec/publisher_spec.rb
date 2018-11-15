@@ -33,10 +33,10 @@ RSpec.describe Maitredee::Publisher do
     recipe = Recipe.new(id: 1, name: "recipe name", servings: 2)
     message = RecipePublisher.call(recipe).first
     expect(message.primary_key).to eq recipe.id.to_s
-    expect(Maitredee.client.messages.first.data["id"]).to eq recipe.id.to_s
+    expect(Maitredee.client.messages.first.body["id"]).to eq recipe.id.to_s
   end
 
-  it "raises errors if missing data" do
+  it "raises errors if missing body" do
     recipe = Recipe.new(id: 1, name: "recipe name", servings: nil)
     expect {
       RecipePublisher.call(recipe)
