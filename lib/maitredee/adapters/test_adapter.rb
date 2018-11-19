@@ -9,7 +9,7 @@ module Maitredee
         @messages ||= []
       end
 
-      def clear
+      def reset
         messages.clear
       end
     end

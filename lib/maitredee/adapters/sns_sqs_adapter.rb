@@ -44,17 +44,24 @@ module Maitredee
         end
       end
 
+      def subscriptions
+        @subscriptions ||= {}
+      end
+
       def subscribe(queue_resource_name:, topic_resource_name:)
         topic = topics[topic_resource_name]
         queue = queues[queue_resource_name]
         queue_arn = queue.attributes["QueueArn"]
 
-        sns_client.subscribe(
+        resp = sns_client.subscribe(
           topic_arn: topic.arn,
           protocol: "sqs",
           endpoint: queue_arn,
           attributes: { "RawMessageDelivery" => "true" }
         )
+
+        subscriptions[resp.subscription_arn] =
+          Aws::SNS::Subscription.new(resp.subscription_arn)
 
         queue.set_attributes(
           attributes: {
@@ -64,6 +71,13 @@ module Maitredee
             )
           }
         )
+      end
+
+      def reset
+        [topics, queues, subscriptions].each do |resource|
+          resource.values.each(&:delete)
+          resource.clear
+        end
       end
 
       private

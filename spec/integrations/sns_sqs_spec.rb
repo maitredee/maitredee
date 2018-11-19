@@ -20,8 +20,7 @@ RSpec.describe "Amazon SNS/SQS" do
   after do
     Aws.config[:stub_responses] = true
 
-    Maitredee.client.topics.values.each(&:delete)
-    Maitredee.client.queues.values.each(&:delete)
+    Maitredee.client.reset
   end
 
   let(:recipe) { Recipe.new(id: 1, name: "recipe name", servings: 2) }
