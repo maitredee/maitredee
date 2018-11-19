@@ -41,8 +41,12 @@ module Maitredee
       message
     end
 
+    def set_client(slug, *args)
+      @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new(*args)
+    end
+
     def client=(slug)
-      @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new
+      set_client(slug)
     end
 
     def topic_resource_name(topic_name)

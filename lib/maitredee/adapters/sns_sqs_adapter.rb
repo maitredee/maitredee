@@ -4,6 +4,14 @@ require "aws-sdk-sqs"
 module Maitredee
   module Adapters
     class SnsSqsAdapter
+      attr_reader :access_key_id, :secret_access_key
+
+      def initialize(access_key_id: nil, secret_access_key: nil, region: nil)
+        @access_key_id = access_key_id || ENV["MAITREDEE_AWS_ACCESS_KEY_ID"]
+        @secret_access_key = secret_access_key || ENV["MAITREDEE_AWS_SECRET_ACCESS_KEY"]
+        @region = region || ENV["MAITREDEE_AWS_REGION"]
+      end
+
       def publish(message)
         sns_client.publish(
           topic_arn: topics[message.topic_resource_name].arn,
@@ -83,11 +91,26 @@ module Maitredee
       private
 
       def sns_client
-        @sns_client ||= Aws::SNS::Client.new
+        @sns_client ||= new_client(Aws::SNS::Client)
       end
 
       def sqs_client
-        @sqs_client ||= Aws::SQS::Client.new
+        @sqs_client ||= new_client(Aws::SQS::Client)
+      end
+
+      def new_client(klass)
+        options = {}
+
+        if access_key_id && secret_access_key
+          options.merge!(
+            access_key_id: access_key_id,
+            secret_access_key: secret_access_key
+          )
+        end
+
+        options[:region] = region if region
+
+        klass.new(options)
       end
 
       def sns_message_attributes(hash)
