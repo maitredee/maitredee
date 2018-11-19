@@ -10,6 +10,7 @@ module Maitredee
         @access_key_id = access_key_id || ENV["MAITREDEE_AWS_ACCESS_KEY_ID"]
         @secret_access_key = secret_access_key || ENV["MAITREDEE_AWS_SECRET_ACCESS_KEY"]
         @region = region || ENV["MAITREDEE_AWS_REGION"]
+        Shoryuken.sqs_client = sqs_client
       end
 
       def publish(message)
@@ -41,14 +42,14 @@ module Maitredee
           topic = sns_client.create_topic(
             name: key
           )
-          hash[key] = Aws::SNS::Topic.new(topic.topic_arn)
+          hash[key] = Aws::SNS::Topic.new(topic.topic_arn, client: sns_client)
         end
       end
 
       def queues
         @queues ||= Hash.new do |hash, key|
           queue_url = sqs_client.create_queue(queue_name: key).queue_url
-          hash[key] = Aws::SQS::Queue.new(queue_url)
+          hash[key] = Aws::SQS::Queue.new(queue_url, client: sqs_client)
         end
       end
 
@@ -69,7 +70,7 @@ module Maitredee
         )
 
         subscriptions[resp.subscription_arn] =
-          Aws::SNS::Subscription.new(resp.subscription_arn)
+          Aws::SNS::Subscription.new(resp.subscription_arn, client: sns_client)
 
         queue.set_attributes(
           attributes: {
