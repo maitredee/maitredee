@@ -4,7 +4,7 @@ require "aws-sdk-sqs"
 module Maitredee
   module Adapters
     class SnsSqsAdapter
-      attr_reader :access_key_id, :secret_access_key
+      attr_reader :access_key_id, :secret_access_key, :region
 
       def initialize(access_key_id: nil, secret_access_key: nil, region: nil)
         @access_key_id = access_key_id || ENV["MAITREDEE_AWS_ACCESS_KEY_ID"]
