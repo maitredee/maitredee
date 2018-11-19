@@ -29,6 +29,7 @@ TODO: Write usage instructions here
 * split into publisher/subscriber sub gems with monorepo
 * use child workers for Subscriber
 * subscriber receive message attributes received_at and queue_name
+* subscriber schema validation
 
 ## Development
 
