@@ -99,7 +99,6 @@ module Maitredee
               Rails.application.class.parent_name.underscore.dasherize
             end
           ENV["MAITREDEE_APP_NAME"] ||
-            ENV["APP_NAME"] ||
             rails_app_name ||
             raise("must set app_name for maitredee")
         end

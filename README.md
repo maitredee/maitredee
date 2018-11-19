@@ -30,6 +30,7 @@ TODO: Write usage instructions here
 * use child workers for Subscriber
 * subscriber receive message attributes received_at and queue_name
 * subscriber schema validation
+* better daemon config
 
 ## Development
 
