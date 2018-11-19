@@ -1,17 +1,20 @@
 require "json"
 require "json_schemer"
+require "set"
 require "active_support/concern"
 require "active_support/core_ext/string/inflections"
 require "active_support/core_ext/object/json"
+require "active_support/json"
 require "pathname"
 require "maitredee/publisher"
-require "maitredee/adapters/sns_adapter"
+require "maitredee/subscriber"
+require "maitredee/adapters/sns_sqs_adapter"
 
 module Maitredee
   class << self
-    attr_accessor :topic_prefix, :schema_path
+    attr_accessor :namespace, :resource_name_suffix, :schema_path
     attr_reader :client
-    attr_writer :env
+    attr_writer :app_name, :env, :default_shoryuken_options
 
     def publish(
       topic:,
@@ -42,12 +45,28 @@ module Maitredee
       @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new
     end
 
-    def topic_resource_name(name)
+    def topic_resource_name(topic_name)
       [
-        topic_prefix,
+        namespace,
         env,
-        name
-      ].join("--")
+        topic_name,
+        resource_name_suffix
+      ].compact.join("--")
+    end
+
+    def queue_resource_name(topic_name, queue_name)
+      [
+        namespace,
+        env,
+        topic_name,
+        app_name,
+        queue_name,
+        resource_name_suffix
+      ].compact.join("--").tap do |val|
+        if val.length > 80
+          raise "Cannot have a queue name longer than 80 characters: #{name}"
+        end
+      end
     end
 
     def validate!(body, schema)
@@ -68,16 +87,51 @@ module Maitredee
       end
     end
 
+    def app_name
+      @app_name ||=
+        begin
+          rails_app_name =
+            if defined?(Rails)
+              Rails.application.class.parent_name.underscore.dasherize
+            end
+          ENV["MAITREDEE_APP_NAME"] ||
+            ENV["APP_NAME"] ||
+            rails_app_name ||
+            raise("must set app_name for maitredee")
+        end
+    end
+
     def env
       @env ||= ENV["MAITREDEE_ENV"] || ENV["RACK_ENV"] || ENV["RAILS_ENV"] || "development"
     end
+
+    def default_shoryuken_options
+      @default_shoryuken_options ||= {
+        body_parser: :json,
+        auto_delete: true
+      }
+    end
+
+    def configure_broker
+      hash_array = Hash.new { |hash, key| hash[key] = [] }
+      topics_and_queues =
+        subscriber_registry.each_with_object(hash_array) do |subscriber, hash|
+          topic_arn = topic_resource_name(subscriber.topic_name)
+          hash[topic_arn] << queue_resource_name(subscriber.topic_name, subscriber.queue_name)
+        end
+      client.configure_broker(topics_and_queues)
+    end
+
+    def subscriber_registry
+      @subscriber_registry ||= Set.new
+    end
   end
 
-  self.topic_prefix = "maitredee"
-  self.client = :sns
+  self.client = :sns_sqs
 
   Error = Class.new(StandardError)
   ValidationError = Class.new(Error)
+  NoRoutesError = Class.new(Error)
 
   Message = Struct.new(
     :topic_resource_name, :topic, :body, :validation_schema,
