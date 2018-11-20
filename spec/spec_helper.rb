@@ -7,7 +7,7 @@ require "aws-sdk-core"
 Maitredee.resource_name_suffix = SecureRandom.hex(6)
 Maitredee.client = :test
 Maitredee.schema_path = "spec/fixtures"
-Maitredee.env = "test"
+Maitredee.namespace = "test"
 Maitredee.app_name = :maitredee
 
 require "support/recipe"
@@ -30,6 +30,6 @@ RSpec.configure do |config|
     Aws.config[:stub_responses] = false
     Maitredee.client = :test
     Maitredee.schema_path = "spec/fixtures"
-    Maitredee.env = "test"
+    Maitredee.namespace = "test"
   end
 end
