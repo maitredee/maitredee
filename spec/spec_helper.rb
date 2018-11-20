@@ -1,5 +1,6 @@
 require "bundler/setup"
 require "pry"
+require "dotenv/load"
 require "maitredee"
 require "maitredee/adapters/test_adapter"
 require "aws-sdk-core"
