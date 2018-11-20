@@ -12,9 +12,9 @@ require "maitredee/adapters/sns_sqs_adapter"
 
 module Maitredee
   class << self
-    attr_accessor :namespace, :resource_name_suffix, :schema_path
+    attr_accessor :resource_name_suffix, :schema_path
     attr_reader :client
-    attr_writer :app_name, :env, :default_shoryuken_options
+    attr_writer :app_name, :namespace, :default_shoryuken_options
 
     def publish(
       topic:,
@@ -52,7 +52,6 @@ module Maitredee
     def topic_resource_name(topic_name)
       [
         namespace,
-        env,
         topic_name,
         resource_name_suffix
       ].compact.join("--")
@@ -61,7 +60,6 @@ module Maitredee
     def queue_resource_name(topic_name, queue_name)
       [
         namespace,
-        env,
         topic_name,
         app_name,
         queue_name,
@@ -104,8 +102,9 @@ module Maitredee
         end
     end
 
-    def env
-      @env ||= ENV["MAITREDEE_ENV"] || ENV["RACK_ENV"] || ENV["RAILS_ENV"] || "development"
+    def namespace
+      @namespace ||=
+        ENV["MAITREDEE_NAMESPACE"] || raise("must set namespace for maitredee")
     end
 
     def default_shoryuken_options
