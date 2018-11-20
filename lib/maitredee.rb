@@ -42,6 +42,7 @@ module Maitredee
     end
 
     def set_client(slug, *args)
+      raise "No client set for Maitredee" if slug.nil?
       @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new(*args)
     end
 
@@ -128,8 +129,6 @@ module Maitredee
       @subscriber_registry ||= Set.new
     end
   end
-
-  self.client = :sns_sqs
 
   Error = Class.new(StandardError)
   ValidationError = Class.new(Error)
