@@ -54,7 +54,7 @@ module Maitredee
 
       def get_shoryuken_options
         @shoryuken_options ||= Maitredee.default_shoryuken_options.merge(
-          queue: Maitredee.queue_resource_name(controller.topic_name, controller.queue_name)
+          queue: controller.queue_resource_name
         )
       end
     end
@@ -64,9 +64,10 @@ module Maitredee
       undef_method :shoryuken_options
       attr_reader :topic_name
 
-      def subscribe_to(topic_name, queue_name: nil, &block)
+      def subscribe_to(topic_name, queue_name: nil, queue_resource_name: nil, &block)
         @topic_name = topic_name
         @queue_name = queue_name if queue_name
+        @queue_resource_name = queue_resource_name if queue_resource_name
 
         proxy = SubscribeProxy.new(self)
         proxy.instance_eval(&block)
@@ -85,6 +86,10 @@ module Maitredee
 
       def queue_name
         @queue_name ||= name.chomp(Subscriber.name.demodulize).underscore.dasherize
+      end
+
+      def queue_resource_name
+        @queue_resource_name ||= Maitredee.queue_resource_name(topic_name, queue_name)
       end
     end
 
