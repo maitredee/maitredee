@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'maitredee/cli/runner'
+Maitredee::CLI::Runner.start

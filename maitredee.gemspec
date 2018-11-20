@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "aws-sdk-sqs"
   spec.add_dependency "json_schemer", "~> 0.1.8"
   spec.add_dependency "shoryuken", ">= 4.0"
+  spec.add_dependency "thor"
 
   spec.add_development_dependency "bundler", "~> 1.17"
   spec.add_development_dependency "pry"
