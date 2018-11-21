@@ -13,7 +13,7 @@ RSpec.describe Maitredee::CLI::Runner do
 
   it "correctly gets queue names from options" do
     file = Tempfile.new(['maitredee', '.yml'])
-    file.write(YAML.dump({ subscribers: ["RecipeSubscriber"] }))
+    file.write(YAML.dump({ "subscribers" => ["RecipeSubscriber"] }))
     file.flush
     args = %W(start -C #{file.path})
     options = described_class.start(args)

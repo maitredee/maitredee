@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    maitredee (0.5.2)
+    maitredee (0.5.3)
       activesupport
       aws-sdk-sns
       aws-sdk-sqs
