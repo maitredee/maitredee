@@ -28,13 +28,12 @@ module Maitredee
 
         if opts[:config_file]
           path = opts.delete(:config_file)
-          puts path
           fail ArgumentError, "The supplied config file #{path} does not exist" unless File.exist?(path)
 
           if (result = YAML.load(ERB.new(IO.read(path)).result))
             file = Tempfile.new(['maitredee-to-shoryuken', '.yml'])
 
-            result.deep_symbolize_keys
+            result.deep_symbolize_keys!
             if result[:subscribers]
               subscribers = result.delete(:subscribers)
               result[:queues] = subscribers.map(&:constantize).map(&:queue_resource_name)
