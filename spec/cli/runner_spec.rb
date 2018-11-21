@@ -11,7 +11,7 @@ RSpec.describe Maitredee::CLI::Runner do
     expect(options).to eq(queues: ["test--recipes--maitredee--recipe--#{Maitredee.resource_name_suffix}"])
   end
 
-  it "correctly gets queue names from options" do
+  it "correctly gets queue names from config" do
     file = Tempfile.new(['maitredee', '.yml'])
     file.write(YAML.dump({ "subscribers" => ["RecipeSubscriber"] }))
     file.flush

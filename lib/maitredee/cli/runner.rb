@@ -10,7 +10,7 @@ module Maitredee
       method_option :concurrency, aliases: '-c', type: :numeric, desc: 'Processor threads to use'
       method_option :daemon,      aliases: '-d', type: :boolean, desc: 'Daemonize process'
       method_option :subscribers, aliases: '-s', type: :array,   desc: 'Subscribers to process with optional weights'
-      method_option :require,     aliases: '-r', type: :string,  desc: 'Dir or path of the workers'
+      method_option :require,     aliases: '-r', type: :string,  desc: 'Dir or path of the subscribers'
       method_option :timeout,     aliases: '-t', type: :numeric, desc: 'Hard shutdown timeout'
       method_option :config,      aliases: '-C', type: :string,  desc: 'Path to config file'
       method_option :config_file,                type: :string,  desc: 'Path to config file (backwards compatibility)'
@@ -25,6 +25,15 @@ module Maitredee
         say '[DEPRECATED] Please use --config instead of --config-file', :yellow if opts[:config_file]
 
         opts[:config_file] = opts.delete(:config) if opts[:config]
+
+        if opts[:rails]
+          opts.delete(:rails)
+          load_rails
+        end
+
+        if opts[:require]
+          require_workers(opts.delete(:require))
+        end
 
         if opts[:config_file]
           path = opts.delete(:config_file)
@@ -61,6 +70,38 @@ module Maitredee
       def version
         say "Maitredee #{Maitredee::VERSION}"
         say "Shoryuken #{Shoryuken::VERSION}"
+      end
+
+      no_commands do
+        def load_rails
+          # Adapted from: https://github.com/mperham/sidekiq/blob/master/lib/sidekiq/cli.rb
+
+          require 'rails'
+          if ::Rails::VERSION::MAJOR < 4
+            require File.expand_path('config/environment.rb')
+            ::Rails.application.eager_load!
+          else
+            # Painful contortions, see 1791 for discussion
+            require File.expand_path('config/application.rb')
+            if ::Rails::VERSION::MAJOR == 4
+              ::Rails::Application.initializer 'maitredee.eager_load' do
+                ::Rails.application.config.eager_load = true
+              end
+            end
+            require 'shoryuken/extensions/active_job_adapter' if Shoryuken.active_job?
+            require File.expand_path('config/environment.rb')
+          end
+        end
+
+        def require_workers(required)
+          return unless required
+
+          if File.directory?(required)
+            Dir[File.join(required, '**', '*.rb')].each(&method(:require))
+          else
+            require required
+          end
+        end
       end
     end
   end
