@@ -27,7 +27,6 @@ TODO: Write usage instructions here
 ## Todo
 
 * split into publisher/subscriber sub gems with monorepo
-* subscriber receive message attributes received_at and queue_name
 * subscriber schema validation
 
 ## Development

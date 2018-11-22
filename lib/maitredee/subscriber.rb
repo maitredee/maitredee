@@ -21,7 +21,7 @@ module Maitredee
       end
     end
 
-    class SubscribeProxy
+    class SubscriberProxy
       attr_reader :controller
 
       def initialize(controller)
@@ -77,7 +77,7 @@ module Maitredee
         @queue_name = queue_name if queue_name
         @queue_resource_name = queue_resource_name if queue_resource_name
 
-        proxy = SubscribeProxy.new(self)
+        proxy = SubscriberProxy.new(self)
         proxy.instance_eval(&block)
 
         if event_configs.empty? && event_configs.default.nil?
@@ -107,18 +107,20 @@ module Maitredee
       def process(sqs_message, body)
         event_name = sqs_message.message_attributes["event_name"]&.string_value
         event_config = event_configs[event_name.to_s]
+        queue_resource_name = sqs_message.queue_url.split("/").last
         if event_config
-          new(sqs_message, body).send(event_config.action)
+          new(sqs_message, body, queue_resource_name).send(event_config.action)
         end
       end
     end
 
-    attr_reader :message, :body, :received_at
+    attr_reader :message, :body, :received_at, :queue_resource_name
 
-    def initialize(sqs_message, body)
+    def initialize(sqs_message, body, queue_resource_name)
       @message = sqs_message
       @body = body
       @received_at = Time.now
+      @queue_resource_name = queue_resource_name
     end
   end
 end
