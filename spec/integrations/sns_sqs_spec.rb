@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe "Amazon SNS/SQS" do
+RSpec.describe "Amazon SNS/SQS", :sns_sqs do
   let(:launcher) { Shoryuken::Launcher.new }
 
   before do
@@ -9,12 +9,12 @@ RSpec.describe "Amazon SNS/SQS" do
 
     Maitredee.configure_broker
 
-    queue = RecipeSubscriber.get_shoryuken_options['queue']
+    queue = RecipeSubscriber.queue_resource_name
 
     Shoryuken.add_group('default', 1)
     Shoryuken.add_queue(queue, 1, 'default')
 
-    Shoryuken.register_worker(queue, RecipeSubscriber)
+    Shoryuken.register_worker(queue, RecipeSubscriber::RecipeSubscriberWorker)
   end
 
   after do
