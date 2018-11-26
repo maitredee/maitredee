@@ -1,20 +1,14 @@
 require "integration_helper"
 require "maitredee"
-require "maitredee/adapters/sns_sqs_adapter"
-Maitredee.client = :sns_sqs
+require "maitredee/adapters/rabbitmq_adapter"
+Maitredee.client = :rabbitmq
 
-RSpec.describe "Amazon SNS/SQS", :sns_sqs, :integration do
-  let(:launcher) { Shoryuken::Launcher.new }
+RSpec.describe "RabbitMQ", :rabbitmq, :integration do
+  let(:launcher) { Hutch::Launcher.new } # ?????????????????
 
   before do
-    Maitredee.configure_broker
-
-    Shoryuken.add_group('default', 1)
-    Shoryuken.add_queue(RecipeSubscriber.queue_resource_name, 1, 'default')
-  end
-
-  after do
     Maitredee.client.reset
+    # Maitredee.configure_broker
   end
 
   let(:recipe) { Recipe.new(id: 1, name: "recipe name", servings: 2) }

@@ -49,24 +49,6 @@ module Maitredee
           minimum_schema: minimum_schema
         )
       end
-
-      def shoryuken_options(auto_delete: nil, batch: nil, body_parser: nil, auto_visibility_timeout: nil, retry_intervals: nil)
-        get_shoryuken_options.merge!(
-          {
-            auto_delete: auto_delete,
-            batch: batch,
-            body_parser: body_parser,
-            auto_visibility_timeout: auto_visibility_timeout,
-            retry_intervals: retry_intervals
-          }.compact
-        )
-      end
-
-      def get_shoryuken_options
-        @shoryuken_options ||= Maitredee.default_shoryuken_options.merge(
-          queue: controller.queue_resource_name
-        )
-      end
     end
 
     class << self
@@ -85,7 +67,10 @@ module Maitredee
         end
 
         worker_class = Class.new(Worker)
-        worker_class.shoryuken_options proxy.shoryuken_options
+        worker_class.shoryuken_options Maitredee.default_shoryuken_options.merge(
+          queue: queue_resource_name
+        )
+
         worker_class.subscriber_class = self
         const_set "#{name}Worker", worker_class
 

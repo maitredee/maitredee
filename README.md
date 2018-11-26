@@ -28,6 +28,8 @@ TODO: Write usage instructions here
 
 * split into publisher/subscriber sub gems with monorepo
 * subscriber schema validation
+* add rabbitmq
+* remove shoryuken_options, add `worker_class_eval do`
 
 ## Development
 

@@ -16,7 +16,14 @@ module Maitredee
       def publish(message)
         sns_client.publish(
           topic_arn: topics[message.topic_resource_name].arn,
-          message: message.body.to_json,
+          message: {
+            topic_name: message.topic,
+            event_name: message.event_name,
+            primary_key: message.primary_key,
+            schema_name: message.validation_schema,
+            body: message.body,
+            maitredee_version: Maitredee::VERSION
+          }.to_json,
           message_attributes: sns_message_attributes(
             topic_name: message.topic,
             event_name: message.event_name,
@@ -148,6 +155,18 @@ module Maitredee
             ]
           }
         POLICY
+      end
+
+      class Worker
+        include Shoryuken::Worker
+
+        class << self
+          attr_accessor :subscriber_class
+        end
+
+        def perform(sqs_message, body)
+          self.class.subscriber_class.process(sqs_message, body)
+        end
       end
     end
   end
