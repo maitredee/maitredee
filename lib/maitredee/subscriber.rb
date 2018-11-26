@@ -2,8 +2,6 @@ require "shoryuken"
 
 module Maitredee
   class Subscriber
-    include Shoryuken::Worker
-
     EventConfig = Struct.new(
       :action,
       :event_name,
@@ -11,7 +9,19 @@ module Maitredee
       keyword_init: true
     )
 
-    class SubscribeProxy
+    class Worker
+      include Shoryuken::Worker
+
+      class << self
+        attr_accessor :subscriber_class
+      end
+
+      def perform(sqs_message, body)
+        self.class.subscriber_class.process(sqs_message, body)
+      end
+    end
+
+    class SubscriberProxy
       attr_reader :controller
 
       def initialize(controller)
@@ -60,8 +70,6 @@ module Maitredee
     end
 
     class << self
-      alias_method :_maitredee_shoryuken_options, :shoryuken_options
-      undef_method :shoryuken_options
       attr_reader :topic_name
 
       def subscribe_to(topic_name, queue_name: nil, queue_resource_name: nil, &block)
@@ -69,14 +77,18 @@ module Maitredee
         @queue_name = queue_name if queue_name
         @queue_resource_name = queue_resource_name if queue_resource_name
 
-        proxy = SubscribeProxy.new(self)
+        proxy = SubscriberProxy.new(self)
         proxy.instance_eval(&block)
 
         if event_configs.empty? && event_configs.default.nil?
           raise Maitredee::NoRoutesError, "No events routed"
         end
 
-        _maitredee_shoryuken_options proxy.shoryuken_options
+        worker_class = Class.new(Worker)
+        worker_class.shoryuken_options proxy.shoryuken_options
+        worker_class.subscriber_class = self
+        const_set "#{name}Worker", worker_class
+
         Maitredee.subscriber_registry.add(self)
       end
 
@@ -91,18 +103,24 @@ module Maitredee
       def queue_resource_name
         @queue_resource_name ||= Maitredee.queue_resource_name(topic_name, queue_name)
       end
+
+      def process(sqs_message, body)
+        event_name = sqs_message.message_attributes["event_name"]&.string_value
+        event_config = event_configs[event_name.to_s]
+        queue_resource_name = sqs_message.queue_url.split("/").last
+        if event_config
+          new(sqs_message, body, queue_resource_name).send(event_config.action)
+        end
+      end
     end
 
-    attr_reader :message, :body
+    attr_reader :message, :body, :received_at, :queue_resource_name
 
-    def perform(sqs_message, body)
+    def initialize(sqs_message, body, queue_resource_name)
       @message = sqs_message
       @body = body
-      event_name = sqs_message.message_attributes["event_name"]&.string_value
-      event_config = self.class.event_configs[event_name.to_s]
-      if event_config
-        send(event_config.action)
-      end
+      @received_at = Time.now
+      @queue_resource_name = queue_resource_name
     end
   end
 end

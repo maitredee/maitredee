@@ -46,7 +46,7 @@ RSpec.describe Maitredee::Subscriber do
     DefaultsSubscriber.messages.clear
   end
 
-  describe "#perform" do
+  describe "#process" do
     let(:recipe_params) do
       {
         body: {
@@ -61,7 +61,7 @@ RSpec.describe Maitredee::Subscriber do
 
     context "controller with no defaults" do
       it "update routes to update" do
-        controller_perform(
+        controller_process(
           NoDefaultsSubscriber,
           event_name: :update,
           **recipe_params
@@ -72,7 +72,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "delete routes to process" do
-        controller_perform(
+        controller_process(
           NoDefaultsSubscriber,
           event_name: :delete,
           **recipe_params
@@ -83,7 +83,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to process" do
-        controller_perform(
+        controller_process(
           NoDefaultsSubscriber,
           event_name: nil,
           **recipe_params
@@ -94,7 +94,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "empty string is routed using nil event to process" do
-        controller_perform(
+        controller_process(
           NoDefaultsSubscriber,
           event_name: "",
           **recipe_params
@@ -105,7 +105,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "does not process non routed events" do
-        controller_perform(
+        controller_process(
           NoDefaultsSubscriber,
           event_name: :unrouted,
           **recipe_params
@@ -118,7 +118,7 @@ RSpec.describe Maitredee::Subscriber do
 
     context "controller with defaults" do
       it "default catches all non routed events" do
-        controller_perform(
+        controller_process(
           DefaultsSubscriber,
           event_name: :unrouted,
           **recipe_params
@@ -129,7 +129,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to default" do
-        controller_perform(
+        controller_process(
           DefaultsSubscriber,
           event_name: nil,
           **recipe_params
@@ -140,8 +140,8 @@ RSpec.describe Maitredee::Subscriber do
       end
     end
 
-    def controller_perform(controller, body:, event_name: nil, schema_name: nil)
-      controller.new.perform(
+    def controller_process(controller, body:, event_name: nil, schema_name: nil)
+      controller.process(
         shoryuken_message(
           body: body,
           event_name: event_name,
@@ -195,7 +195,7 @@ RSpec.describe Maitredee::Subscriber do
     end
 
     it "has default options" do
-      options = NoOptionsSubscriber.shoryuken_options_hash
+      options = NoOptionsSubscriber::NoOptionsSubscriberWorker.shoryuken_options_hash
       expect(options["queue"]).to eq "test--no_options--maitredee--no-options--#{Maitredee.resource_name_suffix}"
       expect(options["auto_delete"]).to be true
       expect(options["body_parser"]).to be :json
