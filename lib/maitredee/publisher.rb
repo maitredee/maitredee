@@ -1,8 +1,6 @@
 module Maitredee
-  module Publisher
-    extend ActiveSupport::Concern
-
-    module ClassMethods
+  class Publisher
+    class << self
       def call(*args)
         publisher = new(*args)
         publisher.process

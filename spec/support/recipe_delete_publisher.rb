@@ -1,5 +1,4 @@
-class RecipeDeletePublisher
-  include Maitredee::Publisher
+class RecipeDeletePublisher < Maitredee::Publisher
 
   publish_defaults(
     topic: :recipes,
