@@ -1,7 +1,7 @@
 require "spec_helper"
 
 RSpec.describe Maitredee::Publisher do
-  it "publisher will save a valid message" do
+  it "publisher will save a valid message", :test_client do
     recipe = Recipe.new(id: 1, name: "recipe name", servings: 2)
     message = RecipePublisher.call(recipe).first
     expect(message.primary_key).to eq recipe.id.to_s

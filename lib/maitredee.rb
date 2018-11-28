@@ -8,13 +8,14 @@ require "active_support/json"
 require "pathname"
 require "maitredee/publisher"
 require "maitredee/subscriber"
+require "maitredee/version"
 require "maitredee/adapters/sns_sqs_adapter"
 
 module Maitredee
   class << self
     attr_accessor :resource_name_suffix, :schema_path
     attr_reader :client
-    attr_writer :app_name, :namespace, :default_shoryuken_options
+    attr_writer :app_name, :namespace
 
     def publish(
       topic:,
@@ -27,12 +28,13 @@ module Maitredee
       body = body.as_json
       validate!(body, validation_schema)
 
-      message = Message.new(
+      message = PublisherMessage.new(
+        message_id: SecureRandom.uuid,
         topic_resource_name: topic_resource_name(topic),
         topic: topic,
         body: body,
-        validation_schema: validation_schema,
-        event_name: event_name,
+        validation_schema: validation_schema&.to_s,
+        event_name: event_name&.to_s,
         primary_key: primary_key&.to_s
       )
 
@@ -108,13 +110,6 @@ module Maitredee
         ENV["MAITREDEE_NAMESPACE"] || raise("must set namespace for maitredee")
     end
 
-    def default_shoryuken_options
-      @default_shoryuken_options ||= {
-        body_parser: :json,
-        auto_delete: true
-      }
-    end
-
     def configure_broker
       hash_array = Hash.new { |hash, key| hash[key] = [] }
       topics_and_queues =
@@ -123,6 +118,11 @@ module Maitredee
           hash[topic_arn] << queue_resource_name(subscriber.topic_name, subscriber.queue_name)
         end
       client.configure_broker(topics_and_queues)
+    end
+
+    def register_subscriber(klass)
+      client.add_worker(klass)
+      subscriber_registry.add(klass)
     end
 
     def subscriber_registry
@@ -134,8 +134,13 @@ module Maitredee
   ValidationError = Class.new(Error)
   NoRoutesError = Class.new(Error)
 
-  Message = Struct.new(
-    :topic_resource_name, :topic, :body, :validation_schema,
+  PublisherMessage = Struct.new(
+    :message_id, :topic_resource_name, :topic, :body, :validation_schema,
     :event_name, :primary_key, keyword_init: true
+  )
+
+  SubscriberMessage = Struct.new(
+    :message_id, :broker_message_id, :topic_name, :event_name, :primary_key, :schema_name, :body,
+    :sent_at, :maitredee_version, :raw_message, :adapter_message, keyword_init: true
   )
 end

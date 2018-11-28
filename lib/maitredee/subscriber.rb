@@ -9,23 +9,11 @@ module Maitredee
       keyword_init: true
     )
 
-    class Worker
-      include Shoryuken::Worker
-
-      class << self
-        attr_accessor :subscriber_class
-      end
-
-      def perform(sqs_message, body)
-        self.class.subscriber_class.process(sqs_message, body)
-      end
-    end
-
     class SubscriberProxy
-      attr_reader :controller
+      attr_reader :subscriber
 
-      def initialize(controller)
-        @controller = controller
+      def initialize(subscriber)
+        @subscriber = subscriber
       end
 
       def event(event_name, to: nil, minimum_schema: nil)
@@ -39,32 +27,14 @@ module Maitredee
           minimum_schema: minimum_schema
         )
 
-        controller.event_configs[event_config.event_name] = event_config
+        subscriber.event_configs[event_config.event_name] = event_config
       end
 
       def default_event(to:, minimum_schema: nil)
-        controller.event_configs.default = EventConfig.new(
+        subscriber.event_configs.default = EventConfig.new(
           event_name: nil,
           action: to.to_s,
           minimum_schema: minimum_schema
-        )
-      end
-
-      def shoryuken_options(auto_delete: nil, batch: nil, body_parser: nil, auto_visibility_timeout: nil, retry_intervals: nil)
-        get_shoryuken_options.merge!(
-          {
-            auto_delete: auto_delete,
-            batch: batch,
-            body_parser: body_parser,
-            auto_visibility_timeout: auto_visibility_timeout,
-            retry_intervals: retry_intervals
-          }.compact
-        )
-      end
-
-      def get_shoryuken_options
-        @shoryuken_options ||= Maitredee.default_shoryuken_options.merge(
-          queue: controller.queue_resource_name
         )
       end
     end
@@ -84,12 +54,7 @@ module Maitredee
           raise Maitredee::NoRoutesError, "No events routed"
         end
 
-        worker_class = Class.new(Worker)
-        worker_class.shoryuken_options proxy.shoryuken_options
-        worker_class.subscriber_class = self
-        const_set "#{name}Worker", worker_class
-
-        Maitredee.subscriber_registry.add(self)
+        Maitredee.register_subscriber(self)
       end
 
       def event_configs
@@ -104,23 +69,18 @@ module Maitredee
         @queue_resource_name ||= Maitredee.queue_resource_name(topic_name, queue_name)
       end
 
-      def process(sqs_message, body)
-        event_name = sqs_message.message_attributes["event_name"]&.string_value
-        event_config = event_configs[event_name.to_s]
-        queue_resource_name = sqs_message.queue_url.split("/").last
+      def process(message)
+        event_config = event_configs[message.event_name.to_s]
         if event_config
-          new(sqs_message, body, queue_resource_name).send(event_config.action)
+          new(message).send(event_config.action)
         end
       end
     end
 
-    attr_reader :message, :body, :received_at, :queue_resource_name
+    attr_reader :message
 
-    def initialize(sqs_message, body, queue_resource_name)
-      @message = sqs_message
-      @body = body
-      @received_at = Time.now
-      @queue_resource_name = queue_resource_name
+    def initialize(message)
+      @message = message
     end
   end
 end
