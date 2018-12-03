@@ -59,9 +59,9 @@ RSpec.describe Maitredee::Subscriber do
       }
     end
 
-    context "controller with no defaults" do
+    context "subscriber with no defaults" do
       it "update routes to update" do
-        controller_process(
+        subscriber_process(
           NoDefaultsSubscriber,
           event_name: :update,
           **recipe_params
@@ -72,7 +72,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "delete routes to process" do
-        controller_process(
+        subscriber_process(
           NoDefaultsSubscriber,
           event_name: :delete,
           **recipe_params
@@ -83,7 +83,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to process" do
-        controller_process(
+        subscriber_process(
           NoDefaultsSubscriber,
           event_name: nil,
           **recipe_params
@@ -94,7 +94,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "empty string is routed using nil event to process" do
-        controller_process(
+        subscriber_process(
           NoDefaultsSubscriber,
           event_name: "",
           **recipe_params
@@ -105,7 +105,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "does not process non routed events" do
-        controller_process(
+        subscriber_process(
           NoDefaultsSubscriber,
           event_name: :unrouted,
           **recipe_params
@@ -116,9 +116,9 @@ RSpec.describe Maitredee::Subscriber do
       end
     end
 
-    context "controller with defaults" do
+    context "subscriber with defaults" do
       it "default catches all non routed events" do
-        controller_process(
+        subscriber_process(
           DefaultsSubscriber,
           event_name: :unrouted,
           **recipe_params
@@ -129,7 +129,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to default" do
-        controller_process(
+        subscriber_process(
           DefaultsSubscriber,
           event_name: nil,
           **recipe_params
@@ -140,41 +140,22 @@ RSpec.describe Maitredee::Subscriber do
       end
     end
 
-    def controller_process(controller, body:, event_name: nil, schema_name: nil)
-      controller.process(
-        shoryuken_message(
+    def subscriber_process(subscriber, body:, event_name: nil, schema_name: nil)
+      subscriber.process(
+        Maitredee::SubscriberMessage.new(
+          message_id: SecureRandom.uuid,
           body: body,
           event_name: event_name,
-          schema_name: schema_name
-        ),
-        body
-      )
-    end
-
-    def shoryuken_message(body:, event_name: nil, schema_name: nil)
-      double(
-        Shoryuken::Message,
-        queue_url: "do-not-care",
-        body: body.to_json,
-        message_attributes: shoryuken_message_attributes(
-          {
-            event_name: event_name,
-            schema_name: schema_name
-          }.compact
-        ),
-        message_id: SecureRandom.uuid,
-        receipt_handle: SecureRandom.uuid
-      )
-    end
-
-    def shoryuken_message_attributes(hash)
-      hash.each_with_object({}) do |(key, val), new_hash|
-        new_hash[key.to_s] = double(
-          Aws::SQS::Types::MessageAttributeValue,
-          data_type: "String",
-          string_value: val.to_s
+          schema_name: schema_name,
+          broker_message_id: nil,
+          topic_name: nil,
+          primary_key: nil,
+          sent_at: Time.now.to_i,
+          maitredee_version: nil,
+          raw_message: nil,
+          adapter_message: nil
         )
-      end
+      )
     end
   end
 
@@ -192,13 +173,6 @@ RSpec.describe Maitredee::Subscriber do
       subscribe_to :no_options do
         default_event to: :default
       end
-    end
-
-    it "has default options" do
-      options = NoOptionsSubscriber::NoOptionsSubscriberWorker.shoryuken_options_hash
-      expect(options["queue"]).to eq "test--no_options--maitredee--no-options--#{Maitredee.resource_name_suffix}"
-      expect(options["auto_delete"]).to be true
-      expect(options["body_parser"]).to be :json
     end
   end
 end

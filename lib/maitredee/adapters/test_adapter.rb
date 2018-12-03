@@ -9,6 +9,9 @@ module Maitredee
         @messages ||= []
       end
 
+      def add_worker(subscriber_class)
+      end
+
       def reset
         messages.clear
       end

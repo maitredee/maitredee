@@ -5,8 +5,12 @@ require "maitredee"
 require "maitredee/adapters/test_adapter"
 require "aws-sdk-core"
 
+if ENV["INTEGRATION_TEST"]
+  Maitredee.client = ENV["INTEGRATION_TEST"].to_sym
+else
+  Maitredee.client = :test
+end
 Maitredee.resource_name_suffix = SecureRandom.hex(6)
-Maitredee.client = :test
 Maitredee.schema_path = "spec/fixtures"
 Maitredee.namespace = "test"
 Maitredee.app_name = :maitredee
@@ -27,10 +31,17 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.before do
+  if ENV["INTEGRATION_TEST"]
+    config.filter_run_excluding :test_client
+  else
+    config.filter_run_excluding :integration
+  end
+
+  config.before do |example|
     Aws.config[:stub_responses] = false
-    Maitredee.client = :test
-    Maitredee.schema_path = "spec/fixtures"
-    Maitredee.namespace = "test"
+  end
+
+  config.after do
+    Maitredee.client.reset
   end
 end
