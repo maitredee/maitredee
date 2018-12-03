@@ -15,6 +15,7 @@ module Maitredee
         Shoryuken.sqs_client = sqs_client
       end
 
+      # @param message [PublisherMessage]
       def publish(message)
         message_attributes = {
           message_id: message.message_id,

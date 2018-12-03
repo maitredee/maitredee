@@ -18,6 +18,15 @@ module Maitredee
     attr_reader :client
     attr_writer :app_name, :namespace
 
+    # publishes messages using configured adapter
+    #
+    # @param topic [String] topic name
+    # @param body [Hash, Array, String] Any valid json data that can be validated by json-schema
+    # @param schema_name [String] A valid schema name for publishing data
+    # @param event_name [String, nil] Event name for subscriber routing
+    # @param primary_key [#to_s, nil] Key to be used for resource identification
+    #
+    # @return [PublisherMessage] published message
     def publish(
       topic_name:,
       body:,
@@ -44,15 +53,26 @@ module Maitredee
       message
     end
 
+    # configure the adapter, must be executed before loading subscribers
+    #
+    # @param slug [#to_s] name of adapter
+    # @param args [] options to send to the adapter
     def set_client(slug, *args)
       raise "No client set for Maitredee" if slug.nil?
       @client = "::Maitredee::Adapters::#{slug.to_s.camelize}Adapter".constantize.new(*args)
     end
 
+    # set a client without parameters
+    #
+    # @param slug [#to_s] name of adapter
     def client=(slug)
       set_client(slug)
     end
 
+    # build topic resource name from topic name
+    #
+    # @param topic_name [#to_s] topic name
+    # @return [String]
     def topic_resource_name(topic_name)
       [
         namespace,
@@ -61,6 +81,11 @@ module Maitredee
       ].compact.join("--")
     end
 
+    # build queue resource name from queue name and topic name
+    #
+    # @param topic_name [#to_s] topic name
+    # @param queue_name [#to_s] queue name
+    # @return [String]
     def queue_resource_name(topic_name, queue_name)
       [
         namespace,
@@ -75,6 +100,13 @@ module Maitredee
       end
     end
 
+    # validate a body given a schema name
+    #
+    # @param body [Array, Hash, String] data to send with message
+    # @param schema [String] string key to look up schema to validate against
+    #
+    # @raise [ValidationError] if validation fails
+    # @return [nil]
     def validate!(body, schema)
       errors = schemas[schema].validate(body.as_json)
       properties = errors.map do |error|
@@ -86,6 +118,9 @@ module Maitredee
       end
     end
 
+    # hash to look up schema
+    #
+    # @return Hash[JSONSchemer::Schema::Draft7]
     def schemas
       @schemas ||= Hash.new do |hash, key|
         path = Pathname.new(schema_path).join("#{key}.json")
@@ -93,6 +128,9 @@ module Maitredee
       end
     end
 
+    # fetch configured app name or automatically fetch from Rails or from ENV["MAITREDEE_APP_NAME"]
+    #
+    # @return [String]
     def app_name
       @app_name ||=
         begin
@@ -106,11 +144,14 @@ module Maitredee
         end
     end
 
+    # fetch configured namespace or automatically fetch from ENV["MAITREDEE_NAMESPACE"]
+    # @return [String]
     def namespace
       @namespace ||=
         ENV["MAITREDEE_NAMESPACE"] || raise("must set namespace for maitredee")
     end
 
+    # configure broker to create topics, queues and subscribe queues to topics
     def configure_broker
       hash_array = Hash.new { |hash, key| hash[key] = [] }
       topics_and_queues =
@@ -121,11 +162,13 @@ module Maitredee
       client.configure_broker(topics_and_queues)
     end
 
+    # @private
     def register_subscriber(klass)
       client.add_worker(klass)
       subscriber_registry.add(klass)
     end
 
+    # @private
     def subscriber_registry
       @subscriber_registry ||= Set.new
     end
