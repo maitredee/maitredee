@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    maitredee (0.7.0)
+    maitredee (0.7.1)
       activejob
       activesupport
       aws-sdk-sns
@@ -22,8 +22,8 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     aws-eventstream (1.0.1)
-    aws-partitions (1.121.0)
-    aws-sdk-core (3.42.0)
+    aws-partitions (1.122.0)
+    aws-sdk-core (3.43.0)
       aws-eventstream (~> 1.0)
       aws-partitions (~> 1.0)
       aws-sigv4 (~> 1.0)

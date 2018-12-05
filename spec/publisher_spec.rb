@@ -39,7 +39,7 @@ RSpec.describe Maitredee::Publisher do
 
     it "enqueues the job" do
       recipe = 1
-      assert_enqueued_with(job: RecipePublisher.publisher_job) do
+      assert_enqueued_with(job: RecipePublisher::PublisherJob) do
         RecipePublisher.call_later(recipe)
       end
     end
@@ -47,7 +47,7 @@ RSpec.describe Maitredee::Publisher do
     it "enqueued job calls the service class" do
       recipe = 1
       expect(RecipePublisher).to receive(:call).with(recipe)
-      RecipePublisher.publisher_job.perform_now(recipe)
+      RecipePublisher::PublisherJob.perform_now(recipe)
     end
   end
 end
