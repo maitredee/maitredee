@@ -30,12 +30,20 @@ RSpec.describe "Amazon SNS/SQS", :sns_sqs, :integration do
 
     it "sends and recieves messages" do
       RecipePublisher.call(recipe)
-      RecipeDeletePublisher.call(recipe)
+      sent_message = RecipeDeletePublisher.call(recipe).first
 
       poll_queues_until { RecipeSubscriber.messages.values.flatten.size >= 2 }
 
       expect(RecipeSubscriber.messages[:process].size).to eq 1
       expect(RecipeSubscriber.messages[:delete].size).to eq 1
+
+      recieved_message = RecipeSubscriber.messages[:delete].first
+
+      expect(sent_message.body).to eq recieved_message.body
+      expect(sent_message.topic_name).to eq recieved_message.topic_name
+      expect(sent_message.event_name).to eq recieved_message.event_name
+      expect(sent_message.primary_key).to eq recieved_message.primary_key
+      expect(sent_message.schema_name).to eq recieved_message.schema_name
     end
 
     def poll_queues_until

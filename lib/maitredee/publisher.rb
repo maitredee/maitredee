@@ -18,11 +18,11 @@ module Maitredee
         publisher.published_messages
       end
 
-      def publish_defaults(topic: nil, event_name: nil, validation_schema: nil)
+      def publish_defaults(topic_name: nil, event_name: nil, schema_name: nil)
         @publish_defaults = {
-          topic: topic,
+          topic_name: topic_name,
           event_name: event_name,
-          validation_schema: validation_schema
+          schema_name: schema_name
         }
       end
 
@@ -35,12 +35,12 @@ module Maitredee
       @published_messages ||= []
     end
 
-    def publish(topic: nil, event_name: nil, validation_schema: nil, primary_key: nil, body:)
+    def publish(topic_name: nil, event_name: nil, schema_name: nil, primary_key: nil, body:)
       defaults = self.class.get_publish_defaults
       published_messages << Maitredee.publish(
-        topic: topic || defaults[:topic],
+        topic_name: topic_name || defaults[:topic_name],
         event_name: event_name || defaults[:event_name],
-        validation_schema: validation_schema || defaults[:validation_schema],
+        schema_name: schema_name || defaults[:schema_name],
         primary_key: primary_key,
         body: body
       )
