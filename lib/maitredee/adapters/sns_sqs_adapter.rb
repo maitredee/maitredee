@@ -18,19 +18,16 @@ module Maitredee
       def publish(message)
         message_attributes = {
           message_id: message.message_id,
-          topic_name: message.topic,
+          topic_name: message.topic_name,
           event_name: message.event_name,
           primary_key: message.primary_key,
-          schema_name: message.validation_schema,
+          schema_name: message.schema_name,
           maitredee_version: Maitredee::VERSION
         }.compact
 
         sns_client.publish(
           topic_arn: topics[message.topic_resource_name].arn,
-          message: message_attributes.merge(
-            sent_at: Time.now.to_i,
-            body: message.body
-          ).to_json,
+          message: message.body.to_json,
           message_attributes: sns_message_attributes(message_attributes)
         )
       end

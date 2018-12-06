@@ -20,20 +20,20 @@ module Maitredee
     def publish(
       topic:,
       body:,
-      validation_schema:,
+      schema_name:,
       event_name: nil,
       primary_key: nil
     )
-      raise ArgumentError, "topic, body or validation_schema is nil" if topic.nil? || body.nil? || validation_schema.nil?
+      raise ArgumentError, "topic, body or schema_name is nil" if topic.nil? || body.nil? || schema_name.nil?
       body = body.as_json
-      validate!(body, validation_schema)
+      validate!(body, schema_name)
 
       message = PublisherMessage.new(
         message_id: SecureRandom.uuid,
         topic_resource_name: topic_resource_name(topic),
-        topic: topic,
+        topic_name: topic.to_s,
         body: body,
-        validation_schema: validation_schema&.to_s,
+        schema_name: schema_name&.to_s,
         event_name: event_name&.to_s,
         primary_key: primary_key&.to_s
       )
@@ -135,7 +135,7 @@ module Maitredee
   NoRoutesError = Class.new(Error)
 
   PublisherMessage = Struct.new(
-    :message_id, :topic_resource_name, :topic, :body, :validation_schema,
+    :message_id, :topic_resource_name, :topic_name, :body, :schema_name,
     :event_name, :primary_key, keyword_init: true
   )
 

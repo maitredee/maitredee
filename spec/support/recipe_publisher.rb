@@ -2,7 +2,7 @@ class RecipePublisher < Maitredee::Publisher
 
   publish_defaults(
     topic: :recipes,
-    validation_schema: :recipe_v1
+    schema_name: :recipe_v1
   )
 
   attr_reader :recipe, :recipe_json
