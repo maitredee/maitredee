@@ -1,7 +1,6 @@
 class RecipeDeletePublisher < Maitredee::Publisher
-
   publish_defaults(
-    topic: :recipes,
+    topic_name: :recipes,
     event_name: :delete,
     schema_name: :recipe_v1
   )

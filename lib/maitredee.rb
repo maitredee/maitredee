@@ -18,20 +18,20 @@ module Maitredee
     attr_writer :app_name, :namespace
 
     def publish(
-      topic:,
+      topic_name:,
       body:,
       schema_name:,
       event_name: nil,
       primary_key: nil
     )
-      raise ArgumentError, "topic, body or schema_name is nil" if topic.nil? || body.nil? || schema_name.nil?
+      raise ArgumentError, "topic_name, body or schema_name is nil" if topic_name.nil? || body.nil? || schema_name.nil?
       body = body.as_json
       validate!(body, schema_name)
 
       message = PublisherMessage.new(
         message_id: SecureRandom.uuid,
-        topic_resource_name: topic_resource_name(topic),
-        topic_name: topic.to_s,
+        topic_resource_name: topic_resource_name(topic_name),
+        topic_name: topic_name.to_s,
         body: body,
         schema_name: schema_name&.to_s,
         event_name: event_name&.to_s,
