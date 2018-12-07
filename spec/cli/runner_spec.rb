@@ -20,4 +20,14 @@ RSpec.describe Maitredee::CLI::Runner do
     config = YAML.load(File.read(options[:config_file])).deep_symbolize_keys
     expect(config).to eq(queues: ["test--recipes--maitredee--recipe--#{Maitredee.resource_name_suffix}"])
   end
+
+  it "configured correctly to allow server to be configured" do
+    block_executed = false
+
+    Shoryuken.configure_server do |config|
+      block_executed = true
+    end
+
+    expect(block_executed).to be true
+  end
 end

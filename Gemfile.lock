@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    maitredee (0.8.0)
+    maitredee (0.8.1)
       activejob
       activesupport
       aws-sdk-sns
