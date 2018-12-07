@@ -1,6 +1,12 @@
 require "thor"
 require "shoryuken/runner"
 
+# ensures server configurations are executed
+module Shoryuken
+  module CLI
+  end
+end
+
 module Maitredee
   module CLI
     class Runner < Thor
