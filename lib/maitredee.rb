@@ -10,6 +10,7 @@ require "maitredee/publisher"
 require "maitredee/subscriber"
 require "maitredee/version"
 require "maitredee/adapters/sns_sqs_adapter"
+require "maitredee/railtie" if defined? ::Rails::Railtie
 
 module Maitredee
   class << self
