@@ -1,5 +1,4 @@
 require "spec_helper"
-require "minitest/assertions"
 
 RSpec.describe Maitredee::Publisher do
   describe ".call" do
@@ -15,39 +14,6 @@ RSpec.describe Maitredee::Publisher do
       expect {
         RecipePublisher.call(recipe)
       }.to raise_error(Maitredee::ValidationError)
-    end
-  end
-
-  describe ".call_later" do
-    include Minitest::Assertions
-    prepend ActiveJob::TestHelper
-    attr_writer :assertions
-
-    def assertions
-      @assertions ||= 0
-    end
-
-    around do |example|
-      before_setup
-      example.run
-      after_teardown
-    end
-
-    def before_setup; end
-
-    def after_teardown; end
-
-    it "enqueues the job" do
-      recipe = 1
-      assert_enqueued_with(job: RecipePublisher::PublisherJob) do
-        RecipePublisher.call_later(recipe)
-      end
-    end
-
-    it "enqueued job calls the service class" do
-      recipe = 1
-      expect(RecipePublisher).to receive(:call).with(recipe)
-      RecipePublisher::PublisherJob.perform_now(recipe)
     end
   end
 end
