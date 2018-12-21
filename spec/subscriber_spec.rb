@@ -159,7 +159,7 @@ RSpec.describe Maitredee::Subscriber do
     end
   end
 
-  describe "#subscribe_to#shoryuken_options" do
+  describe ".subscribe_to" do
     it "raise if no events routed" do
       expect {
         class NoRoutesSubscriber < Maitredee::Subscriber
@@ -169,10 +169,14 @@ RSpec.describe Maitredee::Subscriber do
       }.to raise_error Maitredee::NoRoutesError
     end
 
-    class NoOptionsSubscriber < Maitredee::Subscriber
-      subscribe_to :no_options do
-        default_event to: :default
-      end
+    it "raises if invalid event name and nothing routed" do
+      expect {
+        class InvalidEventNameSubscriber < Maitredee::Subscriber
+          subscribe_to :invalid_event_name do
+            event "this is an method name"
+          end
+        end
+      }.to raise_error ArgumentError, /not a valid method name/
     end
   end
 end

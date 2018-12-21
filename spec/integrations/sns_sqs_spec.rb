@@ -1,4 +1,10 @@
 RSpec.describe "Amazon SNS/SQS", :sns_sqs, :integration do
+  class NoOptionsSubscriber < Maitredee::Subscriber
+    subscribe_to :no_options do
+      default_event to: :default
+    end
+  end
+
   it "has default options" do
     options = Maitredee::Adapters::SnsSqsAdapter::NoOptionsSubscriberWorker.shoryuken_options_hash
     expect(options["queue"]).to eq "test--no_options--maitredee--no-options--#{Maitredee.resource_name_suffix}"

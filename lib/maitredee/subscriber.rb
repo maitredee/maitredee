@@ -41,6 +41,10 @@ module Maitredee
           raise ArgumentError, "event_name and to: cannot both be nil"
         end
 
+        if event_name.present? && /[@$"]/ =~ event_name.to_sym.inspect && to.nil?
+          raise ArgumentError, "'#{event_name}' is not a valid method name, you must set the 'to' parameter"
+        end
+
         event_config = EventConfig.new(
           event_name: event_name.to_s,
           action: (to || event_name).to_s
