@@ -51,11 +51,23 @@ jobs:
       - run:
           name: run rspec tests
           command: |
-            bundle exec rspec --format progress
+            mkdir /tmp/test-results
+            bundle exec rspec \
+              --profile 10 \
+              --format progress
       - run:
           name: run sns/sqs tests
           command: |
             INTEGRATION_TEST=sns_sqs bundle exec rspec --format progress
+      - run:
+          name: run doctests
+          command: bundle exec goodread-rb README.md
+      # Collect reports
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: test-results
 workflows:
   version: 2
   build_and_test:
