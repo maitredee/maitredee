@@ -14,6 +14,16 @@ module Maitredee
       subclass::PublisherJob.service_class = subclass
     end
 
+    # Uses ActieJob to async the publishing
+    # @example To configure the specific async job open PublisherJob
+    #   class RecipePublisher < Maitredee::Publisher
+    #     class PublisherJob
+    #       queue_as :low
+    #     end
+    #   end
+    #
+    #   RecipePublisher.call_later(Recipe.find(1))
+    #
     def call_later(*args)
       self::PublisherJob.perform_later(*args)
     end

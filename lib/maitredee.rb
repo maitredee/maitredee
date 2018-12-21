@@ -9,14 +9,24 @@ require "pathname"
 require "maitredee/publisher"
 require "maitredee/subscriber"
 require "maitredee/version"
+require "maitredee/adapters/base_adapter"
 require "maitredee/adapters/sns_sqs_adapter"
 require "maitredee/railtie" if defined? ::Rails::Railtie
 
 module Maitredee
   class << self
-    attr_accessor :resource_name_suffix, :schema_path
+
+    # allows you to add a suffix to all your resource names, mostly used for testing but could be useful in other occassions.
+    # @return [String] string appended to all resource names
+    attr_accessor :resource_name_suffix
+
+    # this is the path of the folder in which validation_schema will try to do a lookup. This folder should contain json schemas.
+    # @return [String] path to folder
+    attr_accessor :schema_path
+
+    # the client we use for publishing and setting up workers
+    # @return [Maitredee::Adapters::AbstractAdapter]
     attr_reader :client
-    attr_writer :app_name, :namespace
 
     # publishes messages using configured adapter
     #
@@ -118,7 +128,7 @@ module Maitredee
       end
     end
 
-    # hash to look up schema
+    # hash to look up schema based of schema_path
     #
     # @return Hash[JSONSchemer::Schema::Draft7]
     def schemas
@@ -129,6 +139,7 @@ module Maitredee
     end
 
     # fetch configured app name or automatically fetch from Rails or from ENV["MAITREDEE_APP_NAME"]
+    # used for generating queue_resource_name
     #
     # @return [String]
     def app_name
@@ -144,6 +155,11 @@ module Maitredee
         end
     end
 
+    # set app_name instead of using default
+    # @param [String]
+    attr_writer :app_name
+
+
     # fetch configured namespace or automatically fetch from ENV["MAITREDEE_NAMESPACE"]
     # @return [String]
     def namespace
@@ -151,7 +167,12 @@ module Maitredee
         ENV["MAITREDEE_NAMESPACE"] || raise("must set namespace for maitredee")
     end
 
-    # configure broker to create topics, queues and subscribe queues to topics
+    # set namespace instead of using default
+    # @param [String]
+    attr_writer :namespace
+
+    # idempotently configures broker to create topics, queues and subscribe queues to topics
+    # nothing will eveer be deleted or cleaned up
     def configure_broker
       hash_array = Hash.new { |hash, key| hash[key] = [] }
       topics_and_queues =
@@ -162,13 +183,13 @@ module Maitredee
       client.configure_broker(topics_and_queues)
     end
 
-    # @private
+    # @api private
     def register_subscriber(klass)
       client.add_worker(klass)
       subscriber_registry.add(klass)
     end
 
-    # @private
+    # @api private
     def subscriber_registry
       @subscriber_registry ||= Set.new
     end
