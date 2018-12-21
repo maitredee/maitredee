@@ -3,7 +3,7 @@ require "aws-sdk-sqs"
 
 module Maitredee
   module Adapters
-    class SnsSqsAdapter
+    class SnsSqsAdapter < BaseAdapter
       attr_reader :access_key_id, :secret_access_key, :region
 
       def initialize(access_key_id: nil, secret_access_key: nil, region: nil, default_shoryuken_options: nil)

@@ -1,20 +1,18 @@
 module Maitredee
   module Adapters
-    class TestAdapter < BaseAdapter
+    class BaseAdapter
       def publish(message)
-        messages << message
-      end
-
-      def messages
-        @messages ||= []
+        raise NotImplementedError
       end
 
       def add_worker(subscriber_class)
+        raise NotImplementedError
       end
 
       def reset
-        messages.clear
+        raise NotImplementedError
       end
     end
   end
 end
+
