@@ -170,7 +170,8 @@ module Maitredee
     # @param [String]
     attr_writer :namespace
 
-    # configure broker to create topics, queues and subscribe queues to topics
+    # idempotently configures broker to create topics, queues and subscribe queues to topics
+    # nothing will eveer be deleted or cleaned up
     def configure_broker
       hash_array = Hash.new { |hash, key| hash[key] = [] }
       topics_and_queues =
@@ -181,13 +182,13 @@ module Maitredee
       client.configure_broker(topics_and_queues)
     end
 
-    # @private
+    # @api private
     def register_subscriber(klass)
       client.add_worker(klass)
       subscriber_registry.add(klass)
     end
 
-    # @private
+    # @api private
     def subscriber_registry
       @subscriber_registry ||= Set.new
     end

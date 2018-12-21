@@ -3,7 +3,7 @@ require "spec_helper"
 RSpec.describe Maitredee::Subscriber do
   class NoDefaultsSubscriber < Maitredee::Subscriber
     subscribe_to :no_defaults do
-      event :update, minimum_schema: :recipe_v1
+      event :update
       event :delete, to: :process
       event nil, to: :process
     end

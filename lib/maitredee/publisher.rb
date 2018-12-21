@@ -20,7 +20,7 @@ module Maitredee
   # Note that `call` is a class method, `process` is an instance method.
   class Publisher
     class << self
-      # @private
+      # @api private
       def inherited(subclass)
         subclass.const_set("PublisherJob", Class.new(PublisherJob))
         subclass::PublisherJob.service_class = subclass

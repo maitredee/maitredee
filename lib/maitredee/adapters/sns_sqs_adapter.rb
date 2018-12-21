@@ -6,6 +6,12 @@ module Maitredee
     class SnsSqsAdapter < BaseAdapter
       attr_reader :access_key_id, :secret_access_key, :region
 
+      # @param access_key_id [String] if `nil` will look in `ENV["MAITREDEE_AWS_ACCESS_KEY_ID"]`
+      # @param secret_access_key [String] if `nil` will look in `ENV["MAITREDEE_AWS_SECRET_ACCESS_KEY"]`
+      # @param region [String] if `nil` will look in `ENV["MAITREDEE_AWS_REGION"]`
+      # @param default_shoryuken_options [Hash] default options of the shoryuken job listening to the queues
+      #   defaults to `{ body_parser: :json, auto_delete: true }`
+
       def initialize(access_key_id: nil, secret_access_key: nil, region: nil, default_shoryuken_options: nil)
         @access_key_id = access_key_id || ENV["MAITREDEE_AWS_ACCESS_KEY_ID"]
         @secret_access_key = secret_access_key || ENV["MAITREDEE_AWS_SECRET_ACCESS_KEY"]
@@ -15,6 +21,7 @@ module Maitredee
         Shoryuken.sqs_client = sqs_client
       end
 
+      # publishes message to SNS
       # @param message [PublisherMessage]
       def publish(message)
         message_attributes = {
@@ -33,6 +40,8 @@ module Maitredee
         )
       end
 
+      # creates topics from keys and queues from values, and subscribes queues to topics
+      # @param config [Hash{String => Array<String>}]
       def configure_broker(config)
         config.each do |topic_resource_name, queue_resource_names|
           queue_resource_names.each do |queue_resource_name|
@@ -44,6 +53,7 @@ module Maitredee
         end
       end
 
+      # @api private
       def topics
         @topics ||= Hash.new do |hash, key|
           topic = sns_client.create_topic(
@@ -53,6 +63,7 @@ module Maitredee
         end
       end
 
+      # @api private
       def queues
         @queues ||= Hash.new do |hash, key|
           queue_url = sqs_client.create_queue(queue_name: key).queue_url
@@ -60,10 +71,14 @@ module Maitredee
         end
       end
 
+      # @api private
       def subscriptions
         @subscriptions ||= {}
       end
 
+      # subscribes a queue to a topic
+      # @param queue_resource_name [String]
+      # @param topic_resource_name [String]
       def subscribe(queue_resource_name:, topic_resource_name:)
         topic = topics[topic_resource_name]
         queue = queues[queue_resource_name]
@@ -103,6 +118,7 @@ module Maitredee
         worker_class
       end
 
+      # @api private
       def default_shoryuken_options
         @default_shoryuken_options ||= {
           body_parser: :json,
@@ -110,6 +126,8 @@ module Maitredee
         }
       end
 
+      # deletes all topics, queues, and subscriptions
+      # @api private
       def reset
         [topics, queues, subscriptions].each do |resource|
           resource.values.each(&:delete)
