@@ -3,17 +3,17 @@
 An opinionated pub/sub framework.
 
 ## Table of Contents
-- [Overview] (#overview)
-- [Installation] (#installation)
-- [Configuration] (#configuration)
-- [Publisher] (#publisher)
-- [Subscriber] (#subscriber)
-- [Validation schema] (#validation-schema)
-- [Misc] (#misc)
-    - [Development] (#development)
-    - [Contributing] (#contributing)
-    - [License] (#license)
-    - [Code of Conduct] (#code-of-conduct)
+- [Overview](#overview)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Publisher](#publisher)
+- [Subscriber](#subscriber)
+- [Validation schema](#validation-schema)
+- [Misc](#misc)
+    - [Development](#development)
+    - [Contributing](#contributing)
+    - [License](#license)
+    - [Code of Conduct](#code-of-conduct)
 
 ## Overview
 We made maitredee to simplify publishing and subscribing to events for our junior developers. We tried using kafka but ordered eventing was too complicated.
