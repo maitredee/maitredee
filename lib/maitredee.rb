@@ -9,6 +9,7 @@ require "pathname"
 require "maitredee/publisher"
 require "maitredee/subscriber"
 require "maitredee/version"
+require "maitredee/adapters/base_adapter"
 require "maitredee/adapters/sns_sqs_adapter"
 require "maitredee/railtie" if defined? ::Rails::Railtie
 

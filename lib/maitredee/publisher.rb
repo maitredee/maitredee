@@ -20,18 +20,6 @@ module Maitredee
   # Note that `call` is a class method, `process` is an instance method.
   class Publisher
     class << self
-      # @api private
-      def inherited(subclass)
-        subclass.const_set("PublisherJob", Class.new(PublisherJob))
-        subclass::PublisherJob.service_class = subclass
-      end
-
-      # if ActiveJob is configured this will call the publisher asyncronously
-      # @param args [] arguments are passed to #call
-      def call_later(*args)
-        self::PublisherJob.perform_later(*args)
-      end
-
       # call #process and return publishes messages
       # @param args [] arguments passed to #initialize
       def call(*args)
