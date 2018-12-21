@@ -1,7 +1,39 @@
 module Maitredee
+  ##
+  # Inherit from this class to easily publish messages:
+  #
+  #   class RecipePublisher < Maitredee::Publisher
+  #
+  #     def initialize(recipe)
+  #       @recipe = recipe
+  #     end
+  #
+  #     def process
+  #       # do some work
+  #     end
+  #   end
+  #
+  # Then in your Rails app, you can do this:
+  #
+  #   RecipePublisher.call(1, 2, 3)
+  #
+  # Note that `call` is a class method, `process` is an instance method.
   class Publisher
     class << self
+      # @private
+      def inherited(subclass)
+        subclass.const_set("PublisherJob", Class.new(PublisherJob))
+        subclass::PublisherJob.service_class = subclass
+      end
+
+      # if ActiveJob is configured this will call the publisher asyncronously
+      # @param args [] arguments are passed to #call
+      def call_later(*args)
+        self::PublisherJob.perform_later(*args)
+      end
+
       # call #process and return publishes messages
+      # @param args [] arguments passed to #initialize
       def call(*args)
         publisher = new(*args)
         publisher.process
@@ -25,7 +57,7 @@ module Maitredee
       end
     end
 
-    # array of messages published in this call
+    # array of messages published in this instance
     # @return [Array<PublisherMessage>]
     def published_messages
       @published_messages ||= []
