@@ -47,7 +47,7 @@ Maitredee.schema_path = Rails.root.join("your/path").to_s
 Maitredee.client = :sns_sqs
 ```
 
-These namespace can also be set with the environment variable MAITREDEE_NAMESPACE
+These namespace can also be set with the environment variable `MAITREDEE_NAMESPACE`
 
 ### Available clients
 
@@ -56,7 +56,7 @@ Maitredee currently supports the following clients:
 #### SNS/SQS :sns_sqs
 You can set the AWS parameters in a variety of ways.
 Either environment variables or explicitly.
-Supported environment variables are MAITREDEE_AWS_ACCESS_KEY_ID, MAITREDEE_AWS_SECRET_ACCESS_KEY, MAITREDEE_AWS_REGION and then falls back to default AWS keys.
+Supported environment variables are `MAITREDEE_AWS_ACCESS_KEY_ID`, `MAITREDEE_AWS_SECRET_ACCESS_KEY`, `MAITREDEE_AWS_REGION` and then falls back to default AWS keys.
 
 if you wish to set it explicitly:
 ```ruby
@@ -84,6 +84,7 @@ You should reset the client at the beginning of every test with `Maitredee.clien
 
 Create a publisher class for your topic and inherit from `Maitredee::Publisher`
 Optionally define the default topic, event_name, or validation schema with `publish_defaults`
+Maitredee will call `process` on your publisher when it is called. Define a method `process` that calls `publish` with the parameters of your choosing.  `Publish` will default the `topic`, `event_name`, and `schema_name` from your publish_defaults if not given.
 
 ```ruby goodread
 require "maitredee"
@@ -94,28 +95,33 @@ class MyPublisher < Maitredee::Publisher
     event_name: :your_default_event_name,
     schema_name: :your_default_schema
   )
-end
-```
 
-Maitredee will call `process` on your publisher when it is called. Define a method `process` that calls `publish` with the parameters of your choosing.  `Publish` will default the `topic`, `event_name`, and `schema_name` from your publish_defaults if not given.    
-```ruby goodread
-class MyPublisher < Maitredee::Publisher
+  attr_reader :model
+
+  def initialize(model)
+    @model = model
+  end
+
   def process
     publish(
       topic_name: :my_topic,
       event_name: :event_name_is_optional,
       schema_name: :schema_name,
       primary_key: "optionalKey",
-      body: {}
+      body: {
+        id: model.id,
+        name: model.name
+      }
     )
   end
 end
 ```
 
+
 ### Publishing a message
 To publish a message, simply call `call` on your publisher:
 ```ruby
-MyPublisher.call(message)
+MyPublisher.call(model)
 ```
 
 Publish will first validate your schema before publishing the message.
