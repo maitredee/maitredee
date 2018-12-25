@@ -22,6 +22,8 @@ We tried to have zero setup required to get this up and running and make it work
 
 We hope in the future to add more adapters beyond sns/sqs.
 
+For API docks visit https://www.rubydoc.info/gems/maitredee
+
 ## Installation
 
 Add this line to your application's Gemfile:
