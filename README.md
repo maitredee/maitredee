@@ -8,6 +8,7 @@ An opinionated pub/sub framework.
 - [Configuration](#configuration)
 - [Publisher](#publisher)
 - [Subscriber](#subscriber)
+- [Listening to messages](#listening-to-messages)
 - [Validation schema](#validation-schema)
 - [Misc](#misc)
     - [Development](#development)
@@ -92,17 +93,17 @@ Call `#publish` from `#process` to publish messages. `#publish` will default the
 ```ruby goodread
 require "maitredee"
 
-class MyPublisher < Maitredee::Publisher
+class RecipePublisher < Maitredee::Publisher
   publish_defaults(
     topic_name: :default_topic,
     event_name: :optional_default_event_name,
     schema_name: :default_schema
   )
 
-  attr_reader :model
+  attr_reader :recipe
 
-  def initialize(model)
-    @model = model
+  def initialize(recipe)
+    @recipe = recipe
   end
 
   def process
@@ -112,8 +113,8 @@ class MyPublisher < Maitredee::Publisher
       schema_name: :schema_name,
       primary_key: "optionalKey",
       body: {
-        id: model.id,
-        name: model.name
+        id: recipe.id,
+        name: recipe.name
       }
     )
   end
@@ -123,7 +124,7 @@ end
 ### Publishing a message
 To publish a message, simply call `.call` on your publisher:
 ```ruby
-MyPublisher.call(model)
+RecipePublisher.call(model)
 ```
 
 By default `.call` delegate the arguments to `.new` then call `#process` and return `#published_messages` which is an array of published messages.
@@ -170,6 +171,20 @@ class RecipeSubscriber < Maitredee::Subscriber
     Recipe.find(message.body[:id]).destroy
   end
 end
+```
+
+## Listening to messages
+We use shoryuken as our worker backend. Maitredee supports all shoryuken options except queues which is replace with subscribers.
+
+https://github.com/phstc/shoryuken/wiki/Shoryuken-options
+
+```yaml
+subscribers:
+  - RecipeSubscriber
+```
+
+```sh
+maitredee -s RecipeSubscriber 
 ```
 
 ## Validating Schemas

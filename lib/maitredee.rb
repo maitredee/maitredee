@@ -138,7 +138,7 @@ module Maitredee
       end
     end
 
-    # fetch configured app name or automatically fetch from Rails or from ENV["MAITREDEE_APP_NAME"]
+    # fetch configured app name or automatically fetch from Rails or from `ENV["MAITREDEE_APP_NAME"]`
     # used for generating queue_resource_name
     #
     # @return [String]
@@ -160,7 +160,7 @@ module Maitredee
     attr_writer :app_name
 
 
-    # fetch configured namespace or automatically fetch from ENV["MAITREDEE_NAMESPACE"]
+    # fetch configured namespace or automatically fetch from `ENV["MAITREDEE_NAMESPACE"]`
     # @return [String]
     def namespace
       @namespace ||=
