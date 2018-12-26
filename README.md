@@ -150,6 +150,12 @@ class RecipeSubscriber < Maitredee::Subscriber
     default_event to: :process
   end
 
+  # optional initializer to do message pre processing
+  # def initialize(message)
+  #   super
+  #   # do business here
+  # end
+
   def create
     Recipe.create!(message.body)
   end
