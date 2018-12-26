@@ -194,6 +194,7 @@ module Maitredee
         POLICY
       end
 
+      # @private
       class Worker
         include Shoryuken::Worker
 

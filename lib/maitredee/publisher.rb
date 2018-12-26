@@ -2,22 +2,36 @@ module Maitredee
   ##
   # Inherit from this class to easily publish messages:
   #
-  #   class RecipePublisher < Maitredee::Publisher
+  #     class RecipePublisher < Maitredee::Publisher
+  #       publish_defaults(
+  #         topic_name: :default_topic,
+  #         event_name: :optional_default_event_name,
+  #         schema_name: :default_schema
+  #       )
   #
-  #     def initialize(recipe)
-  #       @recipe = recipe
-  #     end
+  #       attr_reader :recipe
   #
-  #     def process
-  #       # do some work
+  #       def initialize(recipe)
+  #         @recipe = recipe
+  #       end
+  #
+  #       def process
+  #         publish(
+  #           topic_name: :my_topic_override,
+  #           event_name: :event_name_is_optional,
+  #           schema_name: :schema_name,
+  #           primary_key: "optionalKey",
+  #           body: {
+  #             id: recipe.id,
+  #             name: recipe.name
+  #           }
+  #         )
+  #       end
   #     end
-  #   end
   #
   # Then in your Rails app, you can do this:
   #
-  #   RecipePublisher.call(1, 2, 3)
-  #
-  # Note that `call` is a class method, `process` is an instance method.
+  #     RecipePublisher.call(1, 2, 3)
   class Publisher
     class << self
       # call #process and return publishes messages

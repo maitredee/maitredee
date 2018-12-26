@@ -2,6 +2,7 @@ require "thor"
 require "shoryuken/runner"
 
 # ensures server configurations are executed
+# @private
 module Shoryuken
   module CLI
   end

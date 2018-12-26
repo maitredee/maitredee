@@ -8,6 +8,7 @@ An opinionated pub/sub framework.
 - [Configuration](#configuration)
 - [Publisher](#publisher)
 - [Subscriber](#subscriber)
+- [Listening to messages](#listening-to-messages)
 - [Validation schema](#validation-schema)
 - [Misc](#misc)
     - [Development](#development)
@@ -21,6 +22,8 @@ We made maitredee to simplify publishing and subscribing to events for our junio
 We tried to have zero setup required to get this up and running and make it work as simply as sidekiq.
 
 We hope in the future to add more adapters beyond sns/sqs.
+
+For API docks visit https://www.rubydoc.info/gems/maitredee
 
 ## Installation
 
@@ -84,49 +87,51 @@ You should reset the client at the beginning of every test with `Maitredee.clien
 
 Create a publisher class for your topic and inherit from `Maitredee::Publisher`
 Optionally define the default topic, event_name, or validation schema with `publish_defaults`
-Maitredee will call `process` on your publisher when it is called. Define a method `process` that calls `publish` with the parameters of your choosing.  `Publish` will default the `topic`, `event_name`, and `schema_name` from your publish_defaults if not given.
+Define an `#initialize` and `#process`. `#process` will get called when you execute the publisher.
+Call `#publish` from `#process` to publish messages. `#publish` will default the parameters `topic`, `event_name`, and `schema_name` from your `.publish_defaults` if not given.
 
 ```ruby goodread
 require "maitredee"
 
-class MyPublisher < Maitredee::Publisher
+class RecipePublisher < Maitredee::Publisher
   publish_defaults(
-    topic_name: :your_default_topic,
-    event_name: :your_default_event_name,
-    schema_name: :your_default_schema
+    topic_name: :default_topic,
+    event_name: :optional_default_event_name,
+    schema_name: :default_schema
   )
 
-  attr_reader :model
+  attr_reader :recipe
 
-  def initialize(model)
-    @model = model
+  def initialize(recipe)
+    @recipe = recipe
   end
 
   def process
     publish(
-      topic_name: :my_topic,
+      topic_name: :my_topic_override,
       event_name: :event_name_is_optional,
       schema_name: :schema_name,
       primary_key: "optionalKey",
       body: {
-        id: model.id,
-        name: model.name
+        id: recipe.id,
+        name: recipe.name
       }
     )
   end
 end
 ```
 
-
 ### Publishing a message
-To publish a message, simply call `call` on your publisher:
+To publish a message, simply call `.call` on your publisher:
 ```ruby
-MyPublisher.call(model)
+RecipePublisher.call(model)
 ```
 
-Publish will first validate your schema before publishing the message.
+By default `.call` delegate the arguments to `.new` then call `#process` and return `#published_messages` which is an array of published messages.
 
-If you have ActiveJob you can also `#call_later` and it will be called asyncronously
+`#publish` will first validate your schema before publishing the message.
+
+If you have ActiveJob configured you can also `#call_later` and it will be called asyncronously
 
 ## Subscriber
 
@@ -148,6 +153,12 @@ class RecipeSubscriber < Maitredee::Subscriber
     default_event to: :process
   end
 
+  # optional initializer to do message pre processing
+  # def initialize(message)
+  #   super
+  #   # do business here
+  # end
+
   def create
     Recipe.create!(message.body)
   end
@@ -160,6 +171,20 @@ class RecipeSubscriber < Maitredee::Subscriber
     Recipe.find(message.body[:id]).destroy
   end
 end
+```
+
+## Listening to messages
+We use shoryuken as our worker backend. Maitredee supports all shoryuken options except queues which is replace with subscribers.
+
+https://github.com/phstc/shoryuken/wiki/Shoryuken-options
+
+```yaml
+subscribers:
+  - RecipeSubscriber
+```
+
+```sh
+maitredee -s RecipeSubscriber 
 ```
 
 ## Validating Schemas

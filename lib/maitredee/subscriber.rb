@@ -4,21 +4,41 @@ module Maitredee
   ##
   # Inherit from this class to easily subscrive to messages:
   #
-  #   class RecipeSubscriber < Maitredee::Subscriber
-  #     subscribe_to :recipes do
-  #       event(:update) # by default this calls the event_name, #delete
+  #     class RecipeSubscriber < Maitredee::Subscriber
+  #       # this is the topic name
+  #       subscribe_to :recipes do
+  #
+  #         # this is the event name optionally say which method to use to process
+  #         event(:create, to: create)
+  #
+  #         # event_name will be used as the method name if it is a valid method name, otherwise to: must be set
+  #         event(:delete)
+  #
+  #         # for empty event name just use nil
+  #         event(nil, to: :process)
+  #
+  #         # you can specify a catch all route
+  #         default_event to: :process
+  #       end
+  #
+  #       # optional initializer to do message pre processing
+  #       # def initialize(message)
+  #       #   super
+  #       #   # do business here
+  #       # end
+  #
+  #       def create
+  #         Recipe.create!(message.body)
+  #       end
+  #
+  #       def process
+  #         Recipe.find(message.body[:id]).update(message.body)
+  #       end
+  #
+  #       def delete
+  #         Recipe.find(message.body[:id]).destroy
+  #       end
   #     end
-  #
-  #     def update
-  #       # do some work
-  #     end
-  #   end
-  #
-  # If you want to process a message manually
-  #
-  #   RecipePublisher.process()
-  #
-  # Note that `call` is a class method, `process` is an instance method.
   class Subscriber
     EventConfig = Struct.new(
       :action,

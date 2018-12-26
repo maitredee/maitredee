@@ -9,6 +9,7 @@ module Maitredee
       end
     end
 
+    # @api private
     def self.create_publisher_job(subclass)
       subclass.const_set("PublisherJob", Class.new(BasePublisherJob))
       subclass::PublisherJob.service_class = subclass
@@ -39,6 +40,7 @@ module Maitredee
       Maitredee::ActiveJob.create_publisher_job(subclass)
     end
 
+    # @private
     class BasePublisherJob < ::ActiveJob::Base
       class << self
         attr_accessor :service_class
