@@ -86,16 +86,17 @@ You should reset the client at the beginning of every test with `Maitredee.clien
 
 Create a publisher class for your topic and inherit from `Maitredee::Publisher`
 Optionally define the default topic, event_name, or validation schema with `publish_defaults`
-Maitredee will call `process` on your publisher when it is called. Define a method `process` that calls `publish` with the parameters of your choosing.  `Publish` will default the `topic`, `event_name`, and `schema_name` from your publish_defaults if not given.
+Define an `#initialize` and `#process`. `#process` will get called when you execute the publisher.
+Call `#publish` from `#process` to publish messages. `#publish` will default the parameters `topic`, `event_name`, and `schema_name` from your `.publish_defaults` if not given.
 
 ```ruby goodread
 require "maitredee"
 
 class MyPublisher < Maitredee::Publisher
   publish_defaults(
-    topic_name: :your_default_topic,
-    event_name: :your_default_event_name,
-    schema_name: :your_default_schema
+    topic_name: :default_topic,
+    event_name: :optional_default_event_name,
+    schema_name: :default_schema
   )
 
   attr_reader :model
@@ -106,7 +107,7 @@ class MyPublisher < Maitredee::Publisher
 
   def process
     publish(
-      topic_name: :my_topic,
+      topic_name: :my_topic_override,
       event_name: :event_name_is_optional,
       schema_name: :schema_name,
       primary_key: "optionalKey",
@@ -119,16 +120,17 @@ class MyPublisher < Maitredee::Publisher
 end
 ```
 
-
 ### Publishing a message
-To publish a message, simply call `call` on your publisher:
+To publish a message, simply call `.call` on your publisher:
 ```ruby
 MyPublisher.call(model)
 ```
 
-Publish will first validate your schema before publishing the message.
+By default `.call` delegate the arguments to `.new` then call `#process` and return `#published_messages` which is an array of published messages.
 
-If you have ActiveJob you can also `#call_later` and it will be called asyncronously
+`#publish` will first validate your schema before publishing the message.
+
+If you have ActiveJob configured you can also `#call_later` and it will be called asyncronously
 
 ## Subscriber
 
