@@ -35,7 +35,7 @@ module Maitredee
 
         sns_client.publish(
           topic_arn: topics[message.topic_resource_name].arn,
-          message: message.body.to_json,
+          message: JSON.dump(message.body),
           message_attributes: sns_message_attributes(message_attributes)
         )
       end

@@ -45,7 +45,7 @@ RSpec.describe "Amazon SNS/SQS", :sns_sqs, :integration do
 
       recieved_message = RecipeSubscriber.messages[:delete].first
 
-      expect(sent_message.body).to eq recieved_message.body
+      expect(deep_stringify_keys(sent_message.body)).to eq recieved_message.body
       expect(sent_message.topic_name).to eq recieved_message.topic_name
       expect(sent_message.event_name).to eq recieved_message.event_name
       expect(sent_message.primary_key).to eq recieved_message.primary_key
@@ -62,6 +62,19 @@ RSpec.describe "Amazon SNS/SQS", :sns_sqs, :integration do
       end
     ensure
       launcher.stop
+    end
+  end
+
+  def deep_stringify_keys(object)
+    case object
+    when Hash
+      object.each_with_object({}) do |(key, value), result|
+        result[key.to_s] = deep_stringify_keys(value)
+      end
+    when Array
+      object.map { |e| deep_stringify_keys(e) }
+    else
+      object
     end
   end
 end
