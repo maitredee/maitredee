@@ -3,8 +3,7 @@ require "json_schemer"
 require "set"
 require "active_support/concern"
 require "active_support/core_ext/string/inflections"
-require "active_support/core_ext/object/json"
-require "active_support/json"
+require "active_support/core_ext/object/blank"
 require "pathname"
 require "maitredee/publisher"
 require "maitredee/subscriber"
@@ -45,7 +44,6 @@ module Maitredee
       primary_key: nil
     )
       raise ArgumentError, "topic_name, body or schema_name is nil" if topic_name.nil? || body.nil? || schema_name.nil?
-      body = body.as_json
       validate!(body, schema_name)
 
       message = PublisherMessage.new(
@@ -118,7 +116,7 @@ module Maitredee
     # @raise [ValidationError] if validation fails
     # @return [nil]
     def validate!(body, schema)
-      errors = schemas[schema].validate(body.as_json)
+      errors = schemas[schema].validate(deep_stringify_keys(body))
       properties = errors.map do |error|
         error["data_pointer"]
       end.join(", ")
@@ -192,6 +190,21 @@ module Maitredee
     # @api private
     def subscriber_registry
       @subscriber_registry ||= Set.new
+    end
+
+    private
+
+    def deep_stringify_keys(object)
+      case object
+      when Hash
+        object.each_with_object({}) do |(key, value), result|
+          result[key.to_s] = deep_stringify_keys(value)
+        end
+      when Array
+        object.map { |e| deep_stringify_keys(e) }
+      else
+        object
+      end
     end
   end
 
