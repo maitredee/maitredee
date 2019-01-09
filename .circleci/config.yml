@@ -26,7 +26,7 @@ jobs:
   rspec:
     working_directory: ~/maitredee
     docker:
-      - image: circleci/ruby:2.5.1
+      - image: circleci/ruby:2.6.0
         environment: &docker_ruby_env
           RACK_ENV: test
           RAILS_ENV: test

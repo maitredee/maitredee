@@ -54,15 +54,13 @@ RSpec.describe Maitredee::Subscriber do
           name: "Bibimbap",
           servings: 2,
           calories: 400
-        },
-        schema_name: :recipe_v2
+        }
       }
     end
 
     context "subscriber with no defaults" do
       it "update routes to update" do
-        subscriber_process(
-          NoDefaultsSubscriber,
+        NoDefaultsSubscriber.test(
           event_name: :update,
           **recipe_params
         )
@@ -72,8 +70,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "delete routes to process" do
-        subscriber_process(
-          NoDefaultsSubscriber,
+        NoDefaultsSubscriber.test(
           event_name: :delete,
           **recipe_params
         )
@@ -83,8 +80,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to process" do
-        subscriber_process(
-          NoDefaultsSubscriber,
+        NoDefaultsSubscriber.test(
           event_name: nil,
           **recipe_params
         )
@@ -94,8 +90,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "empty string is routed using nil event to process" do
-        subscriber_process(
-          NoDefaultsSubscriber,
+        NoDefaultsSubscriber.test(
           event_name: "",
           **recipe_params
         )
@@ -105,8 +100,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "does not process non routed events" do
-        subscriber_process(
-          NoDefaultsSubscriber,
+        NoDefaultsSubscriber.test(
           event_name: :unrouted,
           **recipe_params
         )
@@ -118,8 +112,7 @@ RSpec.describe Maitredee::Subscriber do
 
     context "subscriber with defaults" do
       it "default catches all non routed events" do
-        subscriber_process(
-          DefaultsSubscriber,
+        DefaultsSubscriber.test(
           event_name: :unrouted,
           **recipe_params
         )
@@ -129,8 +122,7 @@ RSpec.describe Maitredee::Subscriber do
       end
 
       it "nil routes to default" do
-        subscriber_process(
-          DefaultsSubscriber,
+        DefaultsSubscriber.test(
           event_name: nil,
           **recipe_params
         )
@@ -138,24 +130,6 @@ RSpec.describe Maitredee::Subscriber do
         expect(DefaultsSubscriber.messages[:default].size).to eq 1
         expect(DefaultsSubscriber.messages[:update].size).to eq 0
       end
-    end
-
-    def subscriber_process(subscriber, body:, event_name: nil, schema_name: nil)
-      subscriber.process(
-        Maitredee::SubscriberMessage.new(
-          message_id: SecureRandom.uuid,
-          body: body,
-          event_name: event_name,
-          schema_name: schema_name,
-          broker_message_id: nil,
-          topic_name: nil,
-          primary_key: nil,
-          sent_at: Time.now.to_i,
-          maitredee_version: nil,
-          raw_message: nil,
-          adapter_message: nil
-        )
-      )
     end
   end
 
