@@ -50,6 +50,11 @@ module Maitredee
             file = Tempfile.new(['maitredee-to-shoryuken', '.yml'])
 
             result.deep_symbolize_keys!
+
+            if result[:rails]
+              load_rails
+            end
+            
             if result[:subscribers]
               subscribers = result.delete(:subscribers)
               result[:queues] = subscribers.map(&:constantize).map(&:queue_resource_name)
