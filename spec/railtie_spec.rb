@@ -40,6 +40,14 @@ RSpec.describe Maitredee::Railtie do
       expect(RecipePublisher).to receive(:call).with(recipe)
       RecipePublisher::PublisherJob.perform_now(recipe)
     end
+
+    it "enqueues the job at" do
+      recipe = 1
+      at = Date.tomorrow.noon
+      assert_enqueued_with(job: RecipePublisher::PublisherJob, at: at) do
+        RecipePublisher.call_later_at(at, recipe)
+      end
+    end
   end
 
   it "Maitredee::ActiveJob#inherited" do

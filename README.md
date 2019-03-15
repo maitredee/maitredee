@@ -79,7 +79,7 @@ This is used for testing.
 Maitredee.client = :test
 ```
 
-When you pubish anything through Maitredee it will be logged in the test client for test verification.
+When you publish anything through Maitredee it will be logged in the test client for test verification.
 
 You should reset the client at the beginning of every test with `Maitredee.client.reset`
 
