@@ -15,7 +15,7 @@ module Maitredee
       subclass::PublisherJob.service_class = subclass
     end
 
-    # Uses ActieJob to async the publishing
+    # Uses ActiveJob to async the publishing
     # @example To configure the specific async job open PublisherJob
     #   class RecipePublisher < Maitredee::Publisher
     #     class PublisherJob
@@ -27,6 +27,14 @@ module Maitredee
     #
     def call_later(*args)
       self::PublisherJob.perform_later(*args)
+    end
+
+    # Like `call_later`, but performs at a given time
+    # @example Configuring a time to perform the job
+    #   RecipePublisher.call_later_at(Date.tomorrow.noon, Recipe.find(1))
+    #
+    def call_later_at(at, *args)
+      self::PublisherJob.set(wait_until: at).perform_later(*args)
     end
 
     private
