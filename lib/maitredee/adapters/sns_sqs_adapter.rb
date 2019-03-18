@@ -122,7 +122,8 @@ module Maitredee
       def default_shoryuken_options
         @default_shoryuken_options ||= {
           body_parser: :json,
-          auto_delete: true
+          auto_delete: true,
+          retry_intervals: ->(attempts) { ((attempts - 1) ** 4) + 15 + (rand(30) * (attempts)) }
         }
       end
 
