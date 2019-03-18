@@ -33,15 +33,6 @@ module Maitredee
 
         opts[:config_file] = opts.delete(:config) if opts[:config]
 
-        if opts[:rails]
-          opts.delete(:rails)
-          load_rails
-        end
-
-        if opts[:require]
-          require_workers(opts.delete(:require))
-        end
-
         if opts[:config_file]
           path = opts.delete(:config_file)
           fail ArgumentError, "The supplied config file #{path} does not exist" unless File.exist?(path)
@@ -52,12 +43,12 @@ module Maitredee
             result.deep_symbolize_keys!
 
             if result[:rails]
-              load_rails
+              opts[:rails] = result.delete(:rails)
             end
-            
+
             if result[:subscribers]
-              subscribers = result.delete(:subscribers)
-              result[:queues] = subscribers.map(&:constantize).map(&:queue_resource_name)
+              opts[:subscribers] ||= []
+              opts[:subscribers] += result.delete(:subscribers)
             end
 
             file.write(YAML.dump(result))
@@ -65,6 +56,15 @@ module Maitredee
 
             opts[:config_file] = file.path
           end
+        end
+
+        if opts[:rails]
+          opts.delete(:rails)
+          load_rails
+        end
+
+        if opts[:require]
+          require_workers(opts.delete(:require))
         end
 
         if opts[:subscribers]
