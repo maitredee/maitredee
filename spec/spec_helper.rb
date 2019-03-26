@@ -19,6 +19,7 @@ require "support/recipe"
 require "support/recipe_delete_publisher"
 require "support/recipe_publisher"
 require "support/recipe_subscriber"
+require "support/menus_subscriber"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
