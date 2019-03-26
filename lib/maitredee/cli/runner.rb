@@ -27,36 +27,27 @@ module Maitredee
       method_option :verbose,     aliases: '-v', type: :boolean, desc: 'Print more verbose output'
       method_option :delay,       aliases: '-D', type: :numeric, desc: 'Number of seconds to pause fetching from an empty queue'
       def start
-        opts = options.to_h.symbolize_keys
+        cli_opts = options.to_h.symbolize_keys
 
-        say '[DEPRECATED] Please use --config instead of --config-file', :yellow if opts[:config_file]
+        say '[DEPRECATED] Please use --config instead of --config-file', :yellow if cli_opts[:config_file]
 
-        opts[:config_file] = opts.delete(:config) if opts[:config]
+        cli_opts[:config_file] = cli_opts.delete(:config) if cli_opts[:config]
 
-        if opts[:config_file]
-          path = opts.delete(:config_file)
+        config_file_opts = {}
+        if cli_opts[:config_file]
+          path = cli_opts.delete(:config_file)
           fail ArgumentError, "The supplied config file #{path} does not exist" unless File.exist?(path)
 
-          if (result = YAML.load(ERB.new(IO.read(path)).result))
-            file = Tempfile.new(['maitredee-to-shoryuken', '.yml'])
-
-            result.deep_symbolize_keys!
-
-            if result[:rails]
-              opts[:rails] = result.delete(:rails)
-            end
-
-            if result[:subscribers]
-              opts[:subscribers] ||= []
-              opts[:subscribers] += result.delete(:subscribers)
-            end
-
-            file.write(YAML.dump(result))
-            file.flush
-
-            opts[:config_file] = file.path
-          end
+          config_file_opts = YAML.load(ERB.new(IO.read(path)).result)
+          config_file_opts.deep_symbolize_keys!
         end
+
+        opts = config_file_opts.merge(cli_opts)
+
+        opts[:subscribers] = []
+        opts[:subscribers] += cli_opts[:subscribers] if cli_opts[:subscribers]
+        opts[:subscribers] += config_file_opts[:subscribers] if config_file_opts[:subscribers]
+        opts[:subscribers].uniq!
 
         if opts[:rails]
           opts.delete(:rails)
@@ -73,9 +64,11 @@ module Maitredee
 
         fail_task "You should set a logfile if you're going to daemonize" if opts[:daemon] && opts[:logfile].nil?
 
-        Shoryuken::Runner.instance.run(opts.freeze)
+        file = Tempfile.new(['maitredee-to-shoryuken', '.yml'])
+        file.write(YAML.dump(opts))
+        file.flush
 
-        opts
+        Shoryuken::Runner.instance.run(config_file: file.path)
       end
 
       desc 'version', 'Prints version'
