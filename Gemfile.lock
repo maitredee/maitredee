@@ -126,7 +126,7 @@ GEM
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
     uri_template (0.7.0)
-    yard (0.9.16)
+    yard (0.9.20)
 
 PLATFORMS
   ruby
